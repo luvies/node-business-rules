@@ -234,7 +234,7 @@ export class Evaluator {
   ): Promise<ExpressionType> {
     let result: ExpressionType | undefined;
 
-    for (const item in expression.body) {
+    for (const item of expression.body) {
       result = await this.evalExpression(item as any);
     }
 
