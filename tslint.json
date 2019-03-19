@@ -87,7 +87,8 @@
     ],
     "max-classes-per-file": false,
     "variable-name": false,
-    "unified-signatures": false
+    "unified-signatures": false,
+    "no-bitwise": false,
   },
   "linterOptions": {
     "exclude": [
