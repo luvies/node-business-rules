@@ -15,7 +15,7 @@ async function main() {
     },
   };
 
-  const evaluator = new Evaluator(context);
+  const evaluator = new Evaluator({ context });
 
   console.log(await evaluator.eval(`sum(a, b) + c + root.fn()`));
 }

@@ -27,11 +27,16 @@ export class Rules {
 
   private async evalRule(rule: Rule): Promise<void> {
     const evaluator = new Evaluator({
-      ...this.context,
-      ...rule.context,
+      context: {
+        ...this.context,
+        ...rule.context,
+      },
     });
-    const result = await evaluator.eval(rule.expression);
-    if (rule.callback && (!rule.equals || rule.equals === result)) {
+    const { result } = await evaluator.eval(rule.expression);
+    if (
+      rule.callback &&
+      (rule.equals !== undefined || rule.equals === result)
+    ) {
       await rule.callback(result);
     }
   }
