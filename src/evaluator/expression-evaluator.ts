@@ -12,7 +12,7 @@ import {
   ThisExpression,
   UnaryExpression,
 } from 'jsep';
-import { InvalidExressionError } from './invalid-expression-error';
+import { ExressionError } from './expression-error';
 
 type Expression =
   | ArrayExpression
@@ -27,16 +27,16 @@ type Expression =
   | ThisExpression
   | UnaryExpression;
 
-export interface TypeMap extends Record<string, ExpressionType> {}
+export interface TypeMap extends Record<string, ExpressionReturnType> {}
 
 export type SimpleType = string | number | boolean;
 
 export type ArrayType = string[] | number[] | boolean[];
 
-export type ExpressionType =
+export type ExpressionReturnType =
   | SimpleType
   | ArrayType
-  | ((...args: any[]) => ExpressionType | Promise<ExpressionType>)
+  | ((...args: any[]) => ExpressionReturnType | Promise<ExpressionReturnType>)
   | TypeMap;
 
 export interface EvaluatorOptions {
@@ -63,7 +63,7 @@ export class ExpressionEvaluator {
 
   public async evalExpression(
     baseExpression: BaseExpression,
-  ): Promise<ExpressionType> {
+  ): Promise<ExpressionReturnType> {
     const expression: Expression = baseExpression as any;
 
     switch (expression.type) {
@@ -101,7 +101,7 @@ export class ExpressionEvaluator {
       const type = typeof expression.elements[0];
 
       if (type !== 'string' && type !== 'number' && type !== 'boolean') {
-        throw new InvalidExressionError(
+        throw new ExressionError(
           'Array can only be of type string, number or boolean',
         );
       }
@@ -114,27 +114,28 @@ export class ExpressionEvaluator {
             const identValue = this.evalIdentifierExpression(element);
             const identType = typeof identValue;
             if (
-              identType !== 'string' &&
-              identType !== 'number' &&
-              identType !== 'boolean'
+              identType === 'string' ||
+              identType === 'number' ||
+              identType === 'boolean'
             ) {
-              throw new InvalidExressionError(
+              value = identValue as any;
+            } else {
+              throw new ExressionError(
                 'Array can only be of type string, number or boolean',
               );
             }
-            value = identValue as any;
             break;
           case 'Literal':
             value = this.evalLiteralExpression(element);
             break;
           default:
-            throw new InvalidExressionError(
+            throw new ExressionError(
               'Array can only contain identifiers and literals',
             );
         }
 
         if (typeof value !== type) {
-          throw new InvalidExressionError(
+          throw new ExressionError(
             'Array can only contain items of the same type',
           );
         } else {
@@ -161,6 +162,7 @@ export class ExpressionEvaluator {
       case '>>>':
       case '%':
         if (
+          // Use explicit typeofs for type correctness.
           (typeof left === 'number' || typeof left === 'bigint') &&
           (typeof right === 'number' || typeof right === 'bigint')
         ) {
@@ -181,7 +183,7 @@ export class ExpressionEvaluator {
               return left % right;
           }
         } else {
-          throw new InvalidExressionError(
+          throw new ExressionError(
             'Cannot perform bitwise operation on non-number',
           );
         }
@@ -206,10 +208,13 @@ export class ExpressionEvaluator {
       case '*':
       case '/':
         // Could do more explicit checks to force same or numeric types
-        if (typeof left !== 'object' && typeof right !== 'object') {
+        if (
+          (typeof left === 'string' || typeof left === 'number') &&
+          (typeof right === 'string' || typeof right === 'number')
+        ) {
           switch (expression.operator) {
             case '+':
-              return left + (right as any);
+              return (left as any) + (right as any);
             case '-':
               return (left as any) - (right as any);
             case '*':
@@ -218,36 +223,36 @@ export class ExpressionEvaluator {
               return (left as any) / (right as any);
           }
         } else {
-          throw new InvalidExressionError(
+          throw new ExressionError(
             `Cannot perform arithmetic operation on ${typeof left} as ${typeof right}`,
           );
         }
       default:
-        throw new InvalidExressionError(
-          `Operator ${expression.operator} is unknown`,
-        );
+        throw new ExressionError(`Operator ${expression.operator} is unknown`);
     }
   }
 
   private async evalCallExpression(
     expression: CallExpression,
-  ): Promise<ExpressionType> {
-    const fn = await this.evalExpression(expression.callee);
-    const args = await Promise.all(
-      expression.arguments.map(argument => this.evalExpression(argument)),
-    );
+  ): Promise<ExpressionReturnType> {
+    const [fn, args] = await Promise.all([
+      this.evalExpression(expression.callee),
+      Promise.all(
+        expression.arguments.map(argument => this.evalExpression(argument)),
+      ),
+    ]);
 
     if (typeof fn === 'function') {
       return fn(...args);
     } else {
-      throw new InvalidExressionError('Cannot call a non-function');
+      throw new ExressionError('Cannot call a non-function');
     }
   }
 
   private async evalCompoundExpression(
     expression: Compound,
-  ): Promise<ExpressionType> {
-    let result: ExpressionType | undefined;
+  ): Promise<ExpressionReturnType> {
+    let result: ExpressionReturnType | undefined;
 
     for (const item of expression.body) {
       result = await this.evalExpression(item);
@@ -256,13 +261,13 @@ export class ExpressionEvaluator {
     if (result !== undefined) {
       return result;
     } else {
-      throw new InvalidExressionError('Compound expression cannot be empty');
+      throw new ExressionError('Compound expression cannot be empty');
     }
   }
 
   private async evalConditionalExpression(
     expression: ConditionalExpression,
-  ): Promise<ExpressionType> {
+  ): Promise<ExpressionReturnType> {
     const [test, consequent, alternate] = await Promise.all([
       this.evalExpression(expression.test),
       this.evalExpression(expression.consequent),
@@ -272,15 +277,15 @@ export class ExpressionEvaluator {
     return test ? consequent : alternate;
   }
 
-  private evalIdentifierExpression(expression: Identifier): ExpressionType {
+  private evalIdentifierExpression(
+    expression: Identifier,
+  ): ExpressionReturnType {
     const value = this._context[expression.name];
 
     if (value !== undefined) {
       return value;
     } else {
-      throw new InvalidExressionError(
-        `Indentifier ${expression.name} not found`,
-      );
+      throw new ExressionError(`Indentifier ${expression.name} not found`);
     }
   }
 
@@ -290,7 +295,7 @@ export class ExpressionEvaluator {
 
   private async evalLogicalExpression(
     expression: LogicalExpression,
-  ): Promise<ExpressionType> {
+  ): Promise<ExpressionReturnType> {
     const [left, right] = await Promise.all([
       this.evalExpression(expression.left),
       this.evalExpression(expression.right),
@@ -302,7 +307,7 @@ export class ExpressionEvaluator {
       case '&&':
         return left && right;
       default:
-        throw new InvalidExressionError(
+        throw new ExressionError(
           `Logical operator ${expression.operator} is invalid`,
         );
     }
@@ -310,7 +315,7 @@ export class ExpressionEvaluator {
 
   private async evalMemberExpression(
     expression: MemberExpression,
-  ): Promise<ExpressionType> {
+  ): Promise<ExpressionReturnType> {
     const [value, property] = await Promise.all([
       this.evalExpression(expression.object),
       expression.property.type === 'Identifier'
@@ -319,21 +324,17 @@ export class ExpressionEvaluator {
     ]);
 
     if (typeof property !== 'string' && typeof property !== 'number') {
-      throw new InvalidExressionError(
-        `Cannot index with type ${typeof property}`,
-      );
+      throw new ExressionError(`Cannot index with type ${typeof property}`);
     }
 
     if (typeof value === 'object') {
       if (value.hasOwnProperty(property)) {
         return (value as any)[property];
       } else {
-        throw new InvalidExressionError(
-          `Value does not have property ${property}`,
-        );
+        throw new ExressionError(`Value does not have property ${property}`);
       }
     } else {
-      throw new InvalidExressionError(`Cannot index type ${typeof value}`);
+      throw new ExressionError(`Cannot index type ${typeof value}`);
     }
   }
 
@@ -356,7 +357,7 @@ export class ExpressionEvaluator {
       case '+':
         return +value;
       default:
-        throw new InvalidExressionError(
+        throw new ExressionError(
           `Unary operator ${expression.operator} is invalid`,
         );
     }

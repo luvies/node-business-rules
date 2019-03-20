@@ -1,12 +1,12 @@
-import { Evaluator, ExpressionType, TypeMap } from './evaluator';
+import { Evaluator, ExpressionReturnType, TypeMap } from './evaluator';
 
 export interface Rule {
   expression: string;
   // A context specific to this rule.
   context?: TypeMap;
   // If set the callback will only be called if the result equals this.
-  equals?: ExpressionType;
-  callback: (result: ExpressionType) => void | Promise<void>;
+  equals?: ExpressionReturnType;
+  callback: (result: ExpressionReturnType) => void | Promise<void>;
 }
 
 export class Rules {

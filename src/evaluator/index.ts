@@ -1,24 +1,18 @@
 import jsep, { Expression as BaseExpression } from 'jsep';
+import { ExressionError } from './expression-error';
 import {
   ArrayType,
   EvaluatorOptions,
   ExpressionEvaluator,
-  ExpressionType,
+  ExpressionReturnType,
   SimpleType,
   TypeMap,
 } from './expression-evaluator';
-import { InvalidExressionError } from './invalid-expression-error';
 
-export {
-  ArrayType,
-  ExpressionType,
-  InvalidExressionError,
-  SimpleType,
-  TypeMap,
-};
+export { ArrayType, ExpressionReturnType, ExressionError, SimpleType, TypeMap };
 
 export interface EvaluationResult {
-  result: ExpressionType;
+  result: ExpressionReturnType;
   cost: number;
 }
 
