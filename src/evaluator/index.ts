@@ -26,13 +26,13 @@ type Expression =
   | ThisExpression
   | UnaryExpression;
 
-interface TypeMap extends Record<string, ExpressionType> {}
+export interface TypeMap extends Record<string, ExpressionType> {}
 
 type SimpleType = string | number | boolean;
 
 type ArrayType = string[] | number[] | boolean[];
 
-type ExpressionType =
+export type ExpressionType =
   | SimpleType
   | ArrayType
   | ((...args: any[]) => ExpressionType | Promise<ExpressionType>)
