@@ -4,6 +4,7 @@ import jsep, {
   CallExpression,
   Compound,
   ConditionalExpression,
+  Expression as BaseExpression,
   Identifier,
   Literal,
   LogicalExpression,
@@ -44,35 +45,37 @@ export class Evaluator {
   public async eval(expression: string): Promise<ExpressionType> {
     const ast = jsep(expression);
 
-    return this.evalExpression(ast as Expression);
+    return this.evalExpression(ast);
   }
 
   private async evalExpression(
-    expression: Expression,
+    expression: BaseExpression,
   ): Promise<ExpressionType> {
-    switch (expression.type) {
+    const expr: Expression = expression as any;
+
+    switch (expr.type) {
       case 'ArrayExpression':
-        return this.evalArrayExpression(expression);
+        return this.evalArrayExpression(expr);
       case 'BinaryExpression':
-        return this.evalBinaryExpression(expression);
+        return this.evalBinaryExpression(expr);
       case 'CallExpression':
-        return this.evalCallExpression(expression);
+        return this.evalCallExpression(expr);
       case 'Compound':
-        return this.evalCompoundExpression(expression);
+        return this.evalCompoundExpression(expr);
       case 'ConditionalExpression':
-        return this.evalConditionalExpression(expression);
+        return this.evalConditionalExpression(expr);
       case 'Identifier':
-        return this.evalIdentifierExpression(expression);
+        return this.evalIdentifierExpression(expr);
       case 'Literal':
-        return this.evalLiteralExpression(expression);
+        return this.evalLiteralExpression(expr);
       case 'LogicalExpression':
-        return this.evalLogicalExpression(expression);
+        return this.evalLogicalExpression(expr);
       case 'MemberExpression':
-        return this.evalMemberExpression(expression);
+        return this.evalMemberExpression(expr);
       case 'ThisExpression':
         return this.evalThisExpression();
       case 'UnaryExpression':
-        return this.evalUnaryExpression(expression);
+        return this.evalUnaryExpression(expr);
     }
   }
 
@@ -91,10 +94,11 @@ export class Evaluator {
       }
 
       return expression.elements.map(element => {
+        const elm: Expression = element as any;
         let value: string | number | boolean;
-        switch (element.type) {
+        switch (elm.type) {
           case 'Identifier':
-            const identValue = this.evalIdentifierExpression(element as any);
+            const identValue = this.evalIdentifierExpression(elm);
             const identType = typeof identValue;
             if (
               identType !== 'string' &&
@@ -108,7 +112,7 @@ export class Evaluator {
             value = identValue as any;
             break;
           case 'Literal':
-            value = this.evalLiteralExpression(element as any);
+            value = this.evalLiteralExpression(elm);
             break;
           default:
             throw new InvalidExressionError(
@@ -131,8 +135,8 @@ export class Evaluator {
     expression: BinaryExpression,
   ): Promise<SimpleType> {
     const [left, right] = await Promise.all([
-      this.evalExpression(expression.left as Expression),
-      this.evalExpression(expression.right as Expression),
+      this.evalExpression(expression.left),
+      this.evalExpression(expression.right),
     ]);
 
     switch (expression.operator) {
@@ -215,11 +219,9 @@ export class Evaluator {
   private async evalCallExpression(
     expression: CallExpression,
   ): Promise<ExpressionType> {
-    const fn = await this.evalExpression(expression.callee as Expression);
+    const fn = await this.evalExpression(expression.callee);
     const args = await Promise.all(
-      expression.arguments.map(argument =>
-        this.evalExpression(argument as Expression),
-      ),
+      expression.arguments.map(argument => this.evalExpression(argument)),
     );
 
     if (typeof fn === 'function') {
@@ -235,7 +237,7 @@ export class Evaluator {
     let result: ExpressionType | undefined;
 
     for (const item of expression.body) {
-      result = await this.evalExpression(item as any);
+      result = await this.evalExpression(item);
     }
 
     if (result !== undefined) {
@@ -249,9 +251,9 @@ export class Evaluator {
     expression: ConditionalExpression,
   ): Promise<ExpressionType> {
     const [test, consequent, alternate] = await Promise.all([
-      this.evalExpression(expression.test as Expression),
-      this.evalExpression(expression.consequent as Expression),
-      this.evalExpression(expression.alternate as Expression),
+      this.evalExpression(expression.test),
+      this.evalExpression(expression.consequent),
+      this.evalExpression(expression.alternate),
     ]);
 
     return test ? consequent : alternate;
@@ -277,8 +279,8 @@ export class Evaluator {
     expression: LogicalExpression,
   ): Promise<ExpressionType> {
     const [left, right] = await Promise.all([
-      this.evalExpression(expression.left as Expression),
-      this.evalExpression(expression.right as Expression),
+      this.evalExpression(expression.left),
+      this.evalExpression(expression.right),
     ]);
 
     switch (expression.operator) {
@@ -297,10 +299,10 @@ export class Evaluator {
     expression: MemberExpression,
   ): Promise<ExpressionType> {
     const [value, property] = await Promise.all([
-      this.evalExpression(expression.object as Expression),
+      this.evalExpression(expression.object),
       expression.property.type === 'Identifier'
         ? (expression.property as Identifier).name
-        : this.evalExpression(expression.property as Expression),
+        : this.evalExpression(expression.property),
     ]);
 
     if (typeof property !== 'string' && typeof property !== 'number') {
@@ -329,7 +331,7 @@ export class Evaluator {
   private async evalUnaryExpression(
     expression: UnaryExpression,
   ): Promise<number | boolean> {
-    const value = await this.evalExpression(expression.argument as Expression);
+    const value = await this.evalExpression(expression.argument);
 
     switch (expression.operator) {
       case '-':
