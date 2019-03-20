@@ -112,13 +112,12 @@ export class ExpressionEvaluator {
         switch (element.type) {
           case 'Identifier':
             const identValue = this.evalIdentifierExpression(element);
-            const identType = typeof identValue;
             if (
-              identType === 'string' ||
-              identType === 'number' ||
-              identType === 'boolean'
+              typeof identValue === 'string' ||
+              typeof identValue === 'number' ||
+              typeof identValue === 'boolean'
             ) {
-              value = identValue as any;
+              value = identValue;
             } else {
               throw new ExressionError(
                 'Array can only be of type string, number or boolean',
