@@ -45,17 +45,28 @@ async function main() {
   // Setting equals below means the rule will only be called if the result matches.
   const rules = new Rules(context);
   rules.add({
+    id: 'ruleA',
     expression: `min(window('speed', '3m')) < 3000 && max(window('vibration', '3m')) > 10`,
     equals: true,
-    callback: () => console.log(`3m rule evaluated to true`),
   });
   rules.add({
+    id: 'ruleB',
     expression: `min(window('speed', '1m')) < 3000 && max(window('vibration', '1m')) > 10`,
     equals: true,
-    callback: () => console.log(`1m rule evaluated to true`),
   });
 
-  await rules.eval();
+  console.log('Run 1');
+  const resultsA = await rules.eval();
+  console.log('All rule results', resultsA.results);
+  console.log('Rules activated', resultsA.activated);
+
+  // Running this twice shows that the rule was already activated in the first run
+  // and so isn't marked as activated in the second run. This can work across
+  // sessions by storing resultsA.results and missing it back into the constructor.
+  console.log('Run 2');
+  const resultsB = await rules.eval();
+  console.log('All rule results', resultsB.results);
+  console.log('Rules activated', resultsB.activated);
 }
 
 main().catch(err => {
