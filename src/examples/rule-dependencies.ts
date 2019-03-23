@@ -17,26 +17,7 @@ async function basic() {
   console.log('All rule results', results.results);
 }
 
-async function circular() {
-  const rules = new Rules({});
-
-  rules.add({
-    id: 'utilityA',
-    expression: `rule('utilityC') * 100`,
-  });
-  rules.add({
-    id: 'utilityB',
-    expression: `rule('utilityA') * 100`,
-  });
-  rules.add({
-    id: 'utilityC',
-    expression: `rule('utilityB') * 100`,
-  });
-
-  const results = await rules.eval();
-  console.log('All rule results', results.results);
-}
-
+// This demonstrates that rules can be depended upon in a tree like structure.
 async function tree() {
   const rules = new Rules({});
 
@@ -55,6 +36,27 @@ async function tree() {
   rules.add({
     id: 'leaf',
     expression: `rule('treeA') + rule('treeB')`,
+  });
+
+  const results = await rules.eval();
+  console.log('All rule results', results.results);
+}
+
+// This one will throw an exception because it's a circular dependency.
+async function circular() {
+  const rules = new Rules({});
+
+  rules.add({
+    id: 'utilityA',
+    expression: `rule('utilityC') * 100`,
+  });
+  rules.add({
+    id: 'utilityB',
+    expression: `rule('utilityA') * 100`,
+  });
+  rules.add({
+    id: 'utilityC',
+    expression: `rule('utilityB') * 100`,
   });
 
   const results = await rules.eval();
