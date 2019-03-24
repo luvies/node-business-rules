@@ -7,26 +7,64 @@
   "author": "luvies",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --project .",
+    "build": "rm -rf dist/* && tsc --project .",
     "lint": "tslint --project . && prettier --check 'src/**/*.ts' 'test/**/*.ts'",
     "fix": "tslint --project . --fix && prettier --check --write 'src/**/*.ts' 'test/**/*.ts'",
-    "test": "mocha -r ts-node/register test/**/*.ts",
+    "test": "jest",
     "postpublish": "git push && git push --tags"
   },
   "dependencies": {
     "jsep": "^0.3.4"
   },
   "devDependencies": {
-    "@types/chai": "^4.1.7",
-    "@types/mocha": "^5.2.6",
+    "@types/jest": "^24.0.11",
     "@types/node": "^11.11.3",
-    "chai": "^4.2.0",
-    "mocha": "^6.0.2",
+    "jest": "^24.5.0",
     "prettier": "^1.16.4",
-    "ts-node": "^8.0.3",
+    "ts-jest": "^24.0.0",
     "tslint": "^5.14.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.3.3333"
+  },
+  "jest": {
+    "collectCoverage": false,
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!**/*.d.ts"
+    ],
+    "setupFiles": [],
+    "testMatch": [
+      "<rootDir>/test/**/?(*.)(spec|test).(j|t)s?(x)"
+    ],
+    "testEnvironment": "node",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "transformIgnorePatterns": [
+      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|ts|tsx)$"
+    ],
+    "rootDir": "./",
+    "roots": [
+      "<rootDir>/test"
+    ],
+    "moduleFileExtensions": [
+      "web.ts",
+      "ts",
+      "web.tsx",
+      "tsx",
+      "web.js",
+      "js",
+      "web.jsx",
+      "jsx",
+      "json",
+      "node",
+      "mjs"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "tsconfig.json"
+      }
+    }
   }
 }

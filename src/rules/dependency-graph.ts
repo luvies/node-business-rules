@@ -21,7 +21,7 @@ export class DependencyGraph {
     }
 
     for (const targetCall of targetCalls) {
-      if (!this.canCall(targetCall, target)) {
+      if (!this.canCall(source, targetCall)) {
         return false;
       }
     }
