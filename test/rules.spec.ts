@@ -1,52 +1,44 @@
-import { expect } from 'chai';
-
 import { Rules } from '../src/rules';
 
 describe('Rules', () => {
   it('Math context exists', async () => {
     const rules = new Rules();
-    rules.add({
-      id: 'math',
+    rules.set('math', {
       expression: `Math.min([1, 2])`,
     });
     const results = await rules.eval();
-    expect(results.results.get('math')).to.equal(1);
+    expect(results.results.get('math')).toBe(1);
   });
 
   it('Basic dependency', async () => {
     const rules = new Rules();
-    rules.add({
-      id: 'base',
+    rules.set('base', {
       expression: `Math.min([1, 2])`,
     });
-    rules.add({
-      id: 'answer',
+    rules.set('answer', {
       expression: `rule('base') + rule('base')`,
     });
     const results = await rules.eval();
-    expect(results.results.get('answer')).to.equal(2);
+    expect(results.results.get('answer')).toBe(2);
   });
 
   it('Activated rule', async () => {
     const rules = new Rules();
-    rules.add({
-      id: 'utility',
+    rules.set('utility', {
       expression: `[10]`,
     });
-    rules.add({
-      id: 'activated',
+    rules.set('activated', {
       expression: `10 > 5`,
     });
-    rules.add({
-      id: 'deactivated',
+    rules.set('deactivated', {
       expression: `5 > 10`,
     });
 
     const results = await rules.eval();
-    expect(results.results.get('utility')).to.deep.equal([10]);
-    expect(results.results.get('activated')).to.equal(true);
-    expect(results.results.get('deactivated')).to.equal(false);
-    expect(results.activated).to.deep.equal(['activated']);
+    expect(results.results.get('utility')).toEqual([10]);
+    expect(results.results.get('activated')).toBe(true);
+    expect(results.results.get('deactivated')).toBe(false);
+    expect(results.activated).toEqual(['activated']);
   });
 
   it('Accepts custom context', async () => {
@@ -56,13 +48,12 @@ describe('Rules', () => {
         fault: 'F1',
       },
     });
-    rules.add({
-      id: 'fault',
+    rules.set('fault', {
       expression: `event.rpm < 500 || !!event.fault`,
     });
     const results = await rules.eval();
-    expect(results.results.get('fault')).to.equal(true);
-    expect(results.activated).to.deep.equal(['fault']);
+    expect(results.results.get('fault')).toBe(true);
+    expect(results.activated).toEqual(['fault']);
   });
 
   it('Persistent state', async () => {
@@ -70,17 +61,16 @@ describe('Rules', () => {
     const rules = new Rules({
       getValue: () => value++,
     });
-    rules.add({
-      id: 'ruleA',
+    rules.set('ruleA', {
       expression: `getValue() > 0`,
     });
     const resultsA = await rules.eval();
-    expect(resultsA.activated.length).to.equal(0);
+    expect(resultsA.activated.length).toBe(0);
 
     const resultsB = await rules.eval();
-    expect(resultsB.activated.length).to.equal(1);
+    expect(resultsB.activated.length).toBe(1);
 
     const resultsC = await rules.eval();
-    expect(resultsC.activated.length).to.equal(0);
+    expect(resultsC.activated.length).toBe(0);
   });
 });
