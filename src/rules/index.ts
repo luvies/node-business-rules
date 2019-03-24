@@ -26,7 +26,7 @@ export interface RuleResults {
 }
 
 export class Rules {
-  private context?: TypeMap;
+  private context: TypeMap;
   private previous?: Map<string, ExpressionReturnType>;
   private graph = new DependencyGraph();
   private resultListener = new ResultListener<RuleResult>();
@@ -36,7 +36,7 @@ export class Rules {
     context?: TypeMap,
     previous?: Map<string, ExpressionReturnType>,
   ) {
-    this.context = context;
+    this.context = context || {};
     this.previous = previous;
   }
 
