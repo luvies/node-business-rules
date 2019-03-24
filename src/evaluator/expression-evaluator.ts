@@ -98,14 +98,6 @@ export class ExpressionEvaluator {
     if (expression.elements.length === 0) {
       return [];
     } else {
-      const type = typeof expression.elements[0];
-
-      if (type !== 'string' && type !== 'number' && type !== 'boolean') {
-        throw new ExressionError(
-          'Array can only be of type string, number or boolean',
-        );
-      }
-
       return expression.elements.map(baseElement => {
         const element: Expression = baseElement as any;
         let value: string | number | boolean;
@@ -133,13 +125,7 @@ export class ExpressionEvaluator {
             );
         }
 
-        if (typeof value !== type) {
-          throw new ExressionError(
-            'Array can only contain items of the same type',
-          );
-        } else {
-          return value as any;
-        }
+        return value as any;
       });
     }
   }
