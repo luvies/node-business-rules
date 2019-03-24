@@ -26,7 +26,7 @@ export interface RuleResults {
 export class Rules {
   private context: TypeMap;
   private previous?: Map<string, ExpressionReturnType>;
-  private graph = new DependencyGraph();
+  private graph = new DependencyGraph([]);
   private resultListener = new ResultListener<RuleResult>();
   private rules: Rule[] = [];
 
@@ -50,7 +50,7 @@ export class Rules {
   }
 
   public async eval(): Promise<RuleResults> {
-    this.graph = new DependencyGraph();
+    this.graph = new DependencyGraph(this.rules.map(rule => rule.id));
     this.resultListener = new ResultListener<RuleResult>();
 
     const rawResults = await Promise.all(

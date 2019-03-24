@@ -3,12 +3,8 @@ import { expect } from 'chai';
 import { DependencyGraph } from '../src/rules/dependency-graph';
 
 describe('Dependency graph', () => {
-  let graph: DependencyGraph;
-  beforeEach(() => {
-    graph = new DependencyGraph();
-  });
-
   it('Basic A -> B', () => {
+    const graph = new DependencyGraph(['a', 'b']);
     expect(graph.canCall('a', 'b')).to.equal(true);
     expect(graph.canCall('b', 'a')).to.equal(true);
     graph.addDependency('a', 'b');
@@ -20,6 +16,7 @@ describe('Dependency graph', () => {
   });
 
   it('Basic A -> B -> C', () => {
+    const graph = new DependencyGraph(['a', 'b', 'c']);
     graph.addDependency('a', 'b');
     graph.addDependency('b', 'c');
     graph.addDependency('a', 'c');
@@ -33,6 +30,7 @@ describe('Dependency graph', () => {
   });
 
   it('Tree', () => {
+    const graph = new DependencyGraph(['left', 'right', 'base', 'leaf']);
     graph.addDependency('left', 'base');
     graph.addDependency('right', 'base');
     graph.addDependency('leaf', 'left');
@@ -52,5 +50,12 @@ describe('Dependency graph', () => {
     );
 
     graph.addDependency('leaf', 'base');
+  });
+
+  it('Call non-existent node', () => {
+    const graph = new DependencyGraph(['a']);
+    expect(graph.addDependency.bind(graph, 'a', 'b')).to.throw(
+      'Target not found in list',
+    );
   });
 });
