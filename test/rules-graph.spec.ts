@@ -8,7 +8,7 @@ describe('Dependency graph', () => {
     graph.addDependency('a', 'b');
     expect(graph.canCall('b', 'a')).toBe(false);
     expect(graph.canCall('a', 'b')).toBe(true);
-    expect(graph.addDependency.bind(graph, 'b', 'a')).toThrow(
+    expect(() => graph.addDependency('b', 'a')).toThrow(
       'Circular dependency detected',
     );
   });
