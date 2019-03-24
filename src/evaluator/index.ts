@@ -1,5 +1,5 @@
 import jsep, { Expression as BaseExpression } from 'jsep';
-import { ExressionError } from './expression-error';
+import { ExpressionError } from './expression-error';
 import {
   ArrayType,
   EvaluatorOptions,
@@ -9,7 +9,13 @@ import {
   TypeMap,
 } from './expression-evaluator';
 
-export { ArrayType, ExpressionReturnType, ExressionError, SimpleType, TypeMap };
+export {
+  ArrayType,
+  ExpressionReturnType,
+  ExpressionError,
+  SimpleType,
+  TypeMap,
+};
 
 export interface EvaluationResult {
   result: ExpressionReturnType;

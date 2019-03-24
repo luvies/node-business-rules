@@ -12,7 +12,7 @@ import {
   ThisExpression,
   UnaryExpression,
 } from 'jsep';
-import { ExressionError } from './expression-error';
+import { ExpressionError } from './expression-error';
 
 type Expression =
   | ArrayExpression
@@ -111,7 +111,7 @@ export class ExpressionEvaluator {
             ) {
               value = identValue;
             } else {
-              throw new ExressionError(
+              throw new ExpressionError(
                 'Array can only be of type string, number or boolean',
               );
             }
@@ -120,7 +120,7 @@ export class ExpressionEvaluator {
             value = this.evalLiteralExpression(element);
             break;
           default:
-            throw new ExressionError(
+            throw new ExpressionError(
               'Array can only contain identifiers and literals',
             );
         }
@@ -168,7 +168,7 @@ export class ExpressionEvaluator {
               return left % right;
           }
         } else {
-          throw new ExressionError(
+          throw new ExpressionError(
             'Cannot perform bitwise operation on non-number',
           );
         }
@@ -208,12 +208,12 @@ export class ExpressionEvaluator {
               return (left as any) / (right as any);
           }
         } else {
-          throw new ExressionError(
+          throw new ExpressionError(
             `Cannot perform arithmetic operation on ${typeof left} as ${typeof right}`,
           );
         }
       default:
-        throw new ExressionError(`Operator ${expression.operator} is unknown`);
+        throw new ExpressionError(`Operator ${expression.operator} is unknown`);
     }
   }
 
@@ -230,7 +230,7 @@ export class ExpressionEvaluator {
     if (typeof fn === 'function') {
       return fn(...args);
     } else {
-      throw new ExressionError('Cannot call a non-function');
+      throw new ExpressionError('Cannot call a non-function');
     }
   }
 
@@ -246,7 +246,7 @@ export class ExpressionEvaluator {
     if (result !== undefined) {
       return result;
     } else {
-      throw new ExressionError('Compound expression cannot be empty');
+      throw new ExpressionError('Compound expression cannot be empty');
     }
   }
 
@@ -270,7 +270,7 @@ export class ExpressionEvaluator {
     if (value !== undefined) {
       return value;
     } else {
-      throw new ExressionError(`Indentifier ${expression.name} not found`);
+      throw new ExpressionError(`Identifier (${expression.name}) not found`);
     }
   }
 
@@ -292,7 +292,7 @@ export class ExpressionEvaluator {
       case '&&':
         return left && right;
       default:
-        throw new ExressionError(
+        throw new ExpressionError(
           `Logical operator ${expression.operator} is invalid`,
         );
     }
@@ -309,17 +309,17 @@ export class ExpressionEvaluator {
     ]);
 
     if (typeof property !== 'string' && typeof property !== 'number') {
-      throw new ExressionError(`Cannot index with type ${typeof property}`);
+      throw new ExpressionError(`Cannot index with type ${typeof property}`);
     }
 
     if (typeof value === 'object') {
       if (value.hasOwnProperty(property)) {
         return (value as any)[property];
       } else {
-        throw new ExressionError(`Value does not have property ${property}`);
+        throw new ExpressionError(`Value does not have property ${property}`);
       }
     } else {
-      throw new ExressionError(`Cannot index type ${typeof value}`);
+      throw new ExpressionError(`Cannot index type ${typeof value}`);
     }
   }
 
@@ -342,7 +342,7 @@ export class ExpressionEvaluator {
       case '+':
         return +value;
       default:
-        throw new ExressionError(
+        throw new ExpressionError(
           `Unary operator ${expression.operator} is invalid`,
         );
     }
