@@ -32,12 +32,6 @@ async function window(name: string, timeframe: string): Promise<number[]> {
 
 async function main() {
   const context = {
-    min(list: number[]): number {
-      return Math.min(...list);
-    },
-    max(list: number[]): number {
-      return Math.max(...list);
-    },
     window,
   };
 
@@ -46,12 +40,12 @@ async function main() {
   const rules = new Rules(context);
   rules.add({
     id: 'ruleA',
-    expression: `min(window('speed', '3m')) < 3000 && max(window('vibration', '3m')) > 10`,
+    expression: `Math.min(window('speed', '3m')) < 3000 && Math.max(window('vibration', '3m')) > 10`,
     equals: true,
   });
   rules.add({
     id: 'ruleB',
-    expression: `min(window('speed', '1m')) < 3000 && max(window('vibration', '1m')) > 10`,
+    expression: `Math.min(window('speed', '1m')) < 3000 && Math.max(window('vibration', '1m')) > 10`,
     equals: true,
   });
 

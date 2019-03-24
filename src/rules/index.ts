@@ -1,5 +1,5 @@
+import { MathContext } from '../contexts/math';
 import { Evaluator, ExpressionReturnType, TypeMap } from '../evaluator';
-
 import { DependencyGraph } from './dependency-graph';
 import { ResultListener } from './result-listener';
 
@@ -86,6 +86,7 @@ export class Rules {
         const ruleResult = await this.resultListener.wait(id);
         return ruleResult.value;
       },
+      Math: MathContext,
       ...this.context,
       ...rule.context,
     };
