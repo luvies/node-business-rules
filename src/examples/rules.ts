@@ -36,17 +36,15 @@ async function main() {
   };
 
   // These rules would be run each time telemetry is received in your system.
-  // Setting equals below means the rule will only be called if the result matches.
+  // If any of the rules return true then they are marked as activated.
   const rules = new Rules(context);
   rules.add({
     id: 'ruleA',
     expression: `Math.min(window('speed', '3m')) < 3000 && Math.max(window('vibration', '3m')) > 10`,
-    equals: true,
   });
   rules.add({
     id: 'ruleB',
     expression: `Math.min(window('speed', '1m')) < 3000 && Math.max(window('vibration', '1m')) > 10`,
-    equals: true,
   });
 
   console.log('Run 1');

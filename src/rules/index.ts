@@ -8,8 +8,6 @@ export interface Rule {
   expression: string;
   // A context specific to this rule.
   context?: TypeMap;
-  // If set allows the rule to be marked as activated.
-  equals?: ExpressionReturnType;
 }
 
 export interface RuleResult {
@@ -94,15 +92,15 @@ export class Rules {
     const evaluatorResult = await evaluator.eval(rule.expression);
     const value = evaluatorResult.result;
 
-    const wasActivated =
-      this.previous && this.previous.get(rule.id) === rule.equals;
-    const isActivated = rule.equals === value;
+    // Specifically true so utility rules aren't activated.
+    const wasActivated = this.previous && this.previous.get(rule.id) === true;
+    const isActivated = value === true;
 
     const result = {
       id: rule.id,
       value,
       rule,
-      activated: rule.equals !== undefined && isActivated && !wasActivated,
+      activated: isActivated && !wasActivated,
     };
 
     this.resultListener.onResult(rule.id, result);
