@@ -3,12 +3,10 @@ import { Rules } from '../rules';
 async function main() {
   const rules = new Rules();
 
-  rules.add({
-    id: 'utilityA',
+  rules.set('utilityA', {
     expression: `1000 * 1000`,
   });
-  rules.add({
-    id: 'func',
+  rules.set('func', {
     expression: `rule('utilityA') * rule('utilityA')`,
   });
 

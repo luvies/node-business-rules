@@ -38,12 +38,10 @@ async function main() {
   // These rules would be run each time telemetry is received in your system.
   // If any of the rules return true then they are marked as activated.
   const rules = new Rules(context);
-  rules.add({
-    id: 'ruleA',
+  rules.set('ruleA', {
     expression: `Math.min(window('speed', '3m')) < 3000 && Math.max(window('vibration', '3m')) > 10`,
   });
-  rules.add({
-    id: 'ruleB',
+  rules.set('ruleB', {
     expression: `Math.min(window('speed', '1m')) < 3000 && Math.max(window('vibration', '1m')) > 10`,
   });
 

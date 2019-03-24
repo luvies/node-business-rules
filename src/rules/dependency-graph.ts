@@ -1,10 +1,6 @@
-interface Dependency {
-  source: string;
-  target: string;
-}
-
 export class DependencyGraph {
-  private dependencies: Dependency[] = [];
+  // Source -> {Targets}
+  private dependencies = new Map<string, Set<string>>();
   private nodes: string[];
 
   public constructor(nodes: string[]) {
@@ -14,21 +10,22 @@ export class DependencyGraph {
   public canCall(source: string, target: string): boolean {
     // Now we need to check the reverse. So if the target has already called the source.
     // First check direct, then go to recursive hell.
-    const direct = this.dependencies.find(dep => {
-      return dep.source === target && dep.target === source;
-    });
-    if (direct) {
+    const targetCalls = this.dependencies.get(target);
+
+    if (!targetCalls) {
+      return true;
+    }
+
+    if (targetCalls.has(source)) {
       return false;
     }
-    // Get each of the items that calls the source.
-    const indirects = this.dependencies.filter(dep => {
-      return source === dep.target;
-    });
-    for (const indirect of indirects) {
-      if (!this.canCall(indirect.source, target)) {
+
+    for (const targetCall of targetCalls) {
+      if (!this.canCall(targetCall, target)) {
         return false;
       }
     }
+
     return true;
   }
 
@@ -43,9 +40,12 @@ export class DependencyGraph {
       throw new Error('Circular dependency detected');
     }
 
-    this.dependencies.push({
-      source,
-      target,
-    });
+    const calls = this.dependencies.get(source);
+
+    if (calls) {
+      calls.add(target);
+    } else {
+      this.dependencies.set(source, new Set([target]));
+    }
   }
 }
