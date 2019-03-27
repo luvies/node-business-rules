@@ -1,16 +1,20 @@
 {
-  "name": "node-business-rules",
+  "name": "@luvies/business-rules",
   "version": "0.0.1",
   "description": "A JS-expression-based rules engine",
   "main": "dist/index.js",
   "repository": "https://github.com/luvies/node-business-rules",
   "author": "luvies",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "rm -rf dist/* && tsc --project .",
     "lint": "tslint --project . && prettier --check 'src/**/*.ts' 'test/**/*.ts'",
     "fix": "tslint --project . --fix && prettier --check --write 'src/**/*.ts' 'test/**/*.ts'",
     "test": "jest",
+    "prepublishOnly": "yarn build && yarn test",
     "postpublish": "git push && git push --tags"
   },
   "dependencies": {
@@ -27,6 +31,19 @@
     "tslint-eslint-rules": "^5.4.0",
     "typescript": "^3.3.3333"
   },
+  "files": [
+    "dist",
+    "package.json",
+    "yarn.lock",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "business",
+    "rules",
+    "jsep",
+    "expression"
+  ],
   "jest": {
     "collectCoverage": false,
     "collectCoverageFrom": [
