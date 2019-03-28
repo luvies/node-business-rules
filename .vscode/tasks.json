@@ -3,9 +3,21 @@
   // for the documentation about the tasks.json format
   "version": "2.0.0",
   "tasks": [{
-    "label": "test",
-    "type": "npm",
-    "script": "test",
-    "problemMatcher": []
-  }],
+      "label": "test",
+      "type": "npm",
+      "script": "test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "watch",
+      "type": "npm",
+      "script": "test:watch",
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ],
 }

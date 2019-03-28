@@ -135,11 +135,25 @@ export class ExpressionEvaluator {
     let value: SimpleType;
 
     switch (expression.operator) {
+      case '+':
+        if (
+          // Use explicit typeofs for type correctness.
+          ((typeof left.value === 'number' || typeof left.value === 'bigint') &&
+            (typeof right.value === 'number' ||
+              typeof right.value === 'bigint')) ||
+          (typeof left.value === 'string' && typeof right.value === 'string')
+        ) {
+          value = (left.value as any) + (right.value as any);
+        } else {
+          throw new ExpressionError(
+            'Operator + can only be applied to 2 numbers or 2 strings',
+          );
+        }
+        break;
       case '<':
       case '>':
       case '<=':
       case '>=':
-      case '+':
       case '-':
       case '*':
       case '/':
@@ -167,9 +181,6 @@ export class ExpressionEvaluator {
               break;
             case '>=':
               value = left.value >= right.value;
-            case '+':
-              value = left.value + right.value;
-              break;
             case '-':
               value = left.value - right.value;
               break;
@@ -273,7 +284,7 @@ export class ExpressionEvaluator {
   ): Promise<ExpressionResult> {
     const test = await this.evalExpression(expression.test);
     const result = await this.evalExpression(
-      test ? expression.consequent : expression.alternate,
+      test.value ? expression.consequent : expression.alternate,
     );
 
     return {
@@ -410,7 +421,7 @@ export class ExpressionEvaluator {
               value = ~result.value;
               break;
             case '+':
-              value = result.value;
+              value = +result.value;
               break;
             default:
               // We should never get here.
