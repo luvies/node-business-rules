@@ -97,7 +97,7 @@ export class Rules {
     };
     const evaluator = new Evaluator({ context });
     const evaluatorResult = await evaluator.eval(rule.expression);
-    const value = evaluatorResult.result;
+    const value = evaluatorResult.value;
 
     // Specifically true so utility rules aren't activated.
     const wasActivated = this.previous && this.previous.get(id) === true;

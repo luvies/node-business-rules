@@ -4,6 +4,7 @@ import {
   ArrayType,
   EvaluatorOptions,
   ExpressionEvaluator,
+  ExpressionResult,
   ExpressionReturnType,
   SimpleType,
   TypeMap,
@@ -11,21 +12,19 @@ import {
 
 export {
   ArrayType,
-  ExpressionReturnType,
+  EvaluatorOptions,
   ExpressionError,
+  ExpressionEvaluator,
+  ExpressionResult,
+  ExpressionReturnType,
   SimpleType,
   TypeMap,
 };
 
-export interface EvaluationResult {
-  result: ExpressionReturnType;
-  cost: number;
-}
-
 export class Evaluator {
   public constructor(private readonly _evalOptions: EvaluatorOptions) {}
 
-  public async eval(expression: string): Promise<EvaluationResult> {
+  public async eval(expression: string): Promise<ExpressionResult> {
     const ast = jsep(expression);
 
     return this.evalExpression(ast);
@@ -33,14 +32,9 @@ export class Evaluator {
 
   public async evalExpression(
     expression: BaseExpression,
-  ): Promise<EvaluationResult> {
+  ): Promise<ExpressionResult> {
     const expressionEvaluator = new ExpressionEvaluator(this._evalOptions);
 
-    const result = await expressionEvaluator.evalExpression(expression);
-
-    return {
-      result,
-      cost: expressionEvaluator.cost,
-    };
+    return expressionEvaluator.evalExpression(expression);
   }
 }

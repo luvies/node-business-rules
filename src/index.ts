@@ -4,13 +4,13 @@ async function main() {
   const context = {
     a: 1,
     b: 2,
-    c: 'c',
+    c: 3,
     sum(a: number, b: number): number {
       return a + b;
     },
     root: {
       fn() {
-        return Promise.resolve('b');
+        return Promise.resolve(4);
       },
     },
   };

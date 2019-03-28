@@ -31,30 +31,32 @@ export interface TypeMap extends Record<string, ExpressionReturnType> {}
 
 export type SimpleType = string | number | boolean;
 
-export type ArrayType = string[] | number[] | boolean[];
+export type FunctionType = (
+  ...args: any[]
+) => ExpressionReturnType | Promise<ExpressionReturnType>;
+
+export interface ArrayType extends Array<ExpressionReturnType> {}
 
 export type ExpressionReturnType =
   | SimpleType
   | ArrayType
-  | ((...args: any[]) => ExpressionReturnType | Promise<ExpressionReturnType>)
+  | FunctionType
   | TypeMap;
+
+export interface ExpressionResult<T = ExpressionReturnType> {
+  value: T;
+  nodes: number;
+  functionCalls: number;
+}
 
 export interface EvaluatorOptions {
   /**
    * The context of the expression.
    */
   context: TypeMap;
-  /**
-   * The maxmimum cost that the expression is allowed.
-   * If it tries to go beyond it, then an exception is thrown during
-   * execution.
-   */
-  maxCost?: number;
 }
 
 export class ExpressionEvaluator {
-  public cost = 0;
-
   private readonly _context: TypeMap;
 
   public constructor(options: EvaluatorOptions) {
@@ -63,7 +65,7 @@ export class ExpressionEvaluator {
 
   public async evalExpression(
     baseExpression: BaseExpression,
-  ): Promise<ExpressionReturnType> {
+  ): Promise<ExpressionResult> {
     const expression: Expression = baseExpression as any;
 
     switch (expression.type) {
@@ -89,56 +91,58 @@ export class ExpressionEvaluator {
         return this.evalThisExpression();
       case 'UnaryExpression':
         return this.evalUnaryExpression(expression);
+      default:
+        throw new ExpressionError(
+          `Expression type ${baseExpression.type} is invalid`,
+        );
     }
   }
 
   private async evalArrayExpression(
     expression: ArrayExpression,
-  ): Promise<ArrayType> {
-    if (expression.elements.length === 0) {
-      return [];
-    } else {
-      return expression.elements.map(baseElement => {
-        const element: Expression = baseElement as any;
-        let value: string | number | boolean;
-        switch (element.type) {
-          case 'Identifier':
-            const identValue = this.evalIdentifierExpression(element);
-            if (
-              typeof identValue === 'string' ||
-              typeof identValue === 'number' ||
-              typeof identValue === 'boolean'
-            ) {
-              value = identValue;
-            } else {
-              throw new ExpressionError(
-                'Array can only be of type string, number or boolean',
-              );
-            }
-            break;
-          case 'Literal':
-            value = this.evalLiteralExpression(element);
-            break;
-          default:
-            throw new ExpressionError(
-              'Array can only contain identifiers and literals',
-            );
-        }
+  ): Promise<ExpressionResult<ArrayType>> {
+    const result = {
+      value: [] as ArrayType,
+      nodes: 1,
+      functionCalls: 0,
+    };
 
-        return value as any;
-      });
+    if (expression.elements.length === 0) {
+      return result;
+    } else {
+      const elements = await Promise.all(
+        expression.elements.map(element => this.evalExpression(element)),
+      );
+
+      for (const element of elements) {
+        result.value.push(element.value);
+        result.nodes += element.nodes;
+        result.functionCalls += element.functionCalls;
+      }
+
+      return result;
     }
   }
 
   private async evalBinaryExpression(
     expression: BinaryExpression,
-  ): Promise<SimpleType> {
+  ): Promise<ExpressionResult<SimpleType>> {
     const [left, right] = await Promise.all([
       this.evalExpression(expression.left),
       this.evalExpression(expression.right),
     ]);
 
+    let value: SimpleType;
+
     switch (expression.operator) {
+      case '<':
+      case '>':
+      case '<=':
+      case '>=':
+      case '+':
+      case '-':
+      case '*':
+      case '/':
       case '|':
       case '^':
       case '&':
@@ -148,78 +152,86 @@ export class ExpressionEvaluator {
       case '%':
         if (
           // Use explicit typeofs for type correctness.
-          (typeof left === 'number' || typeof left === 'bigint') &&
-          (typeof right === 'number' || typeof right === 'bigint')
+          (typeof left.value === 'number' || typeof left.value === 'bigint') &&
+          (typeof right.value === 'number' || typeof right.value === 'bigint')
         ) {
           switch (expression.operator) {
-            case '|':
-              return left | right;
-            case '^':
-              return left ^ right;
-            case '&':
-              return left & right;
-            case '<<':
-              return left << right;
-            case '>>':
-              return left >> right;
-            case '>>>':
-              return left >>> right;
-            case '%':
-              return left % right;
-          }
-        } else {
-          throw new ExpressionError(
-            'Cannot perform bitwise operation on non-number',
-          );
-        }
-      case '==':
-        return left == right;
-      case '!=':
-        return left != right;
-      case '===':
-        return left === right;
-      case '!==':
-        return left !== right;
-      case '<':
-        return left < right;
-      case '>':
-        return left > right;
-      case '<=':
-        return left <= right;
-      case '>=':
-        return left >= right;
-      case '+':
-      case '-':
-      case '*':
-      case '/':
-        // Could do more explicit checks to force same or numeric types
-        if (
-          (typeof left === 'string' || typeof left === 'number') &&
-          (typeof right === 'string' || typeof right === 'number')
-        ) {
-          switch (expression.operator) {
+            case '<':
+              value = left.value < right.value;
+              break;
+            case '>':
+              value = left.value > right.value;
+              break;
+            case '<=':
+              value = left.value <= right.value;
+              break;
+            case '>=':
+              value = left.value >= right.value;
             case '+':
-              return (left as any) + (right as any);
+              value = left.value + right.value;
+              break;
             case '-':
-              return (left as any) - (right as any);
+              value = left.value - right.value;
+              break;
             case '*':
-              return (left as any) * (right as any);
+              value = left.value * right.value;
+              break;
             case '/':
-              return (left as any) / (right as any);
+              value = left.value / right.value;
+              break;
+            case '|':
+              value = left.value | right.value;
+              break;
+            case '^':
+              value = left.value ^ right.value;
+              break;
+            case '&':
+              value = left.value & right.value;
+              break;
+            case '<<':
+              value = left.value << right.value;
+              break;
+            case '>>':
+              value = left.value >> right.value;
+              break;
+            case '>>>':
+              value = left.value >>> right.value;
+              break;
+            case '%':
+              value = left.value % right.value;
+              break;
+            default:
+              // We should never get here.
+              throw new ExpressionError('???');
           }
         } else {
           throw new ExpressionError(
-            `Cannot perform arithmetic operation on ${typeof left} as ${typeof right}`,
+            `Cannot perform operation ${expression.operator} on non-number`,
           );
         }
+        break;
+      case '==':
+      case '===':
+        value = left.value === right.value;
+        break;
+      case '!=':
+      case '!==':
+        value = left.value !== right.value;
+        break;
       default:
         throw new ExpressionError(`Operator ${expression.operator} is unknown`);
     }
+
+    return {
+      value,
+      nodes: 1 + left.nodes + right.nodes,
+      functionCalls: left.functionCalls + right.functionCalls,
+    };
   }
 
   private async evalCallExpression(
     expression: CallExpression,
-  ): Promise<ExpressionReturnType> {
+  ): Promise<ExpressionResult> {
     const [fn, args] = await Promise.all([
       this.evalExpression(expression.callee),
       Promise.all(
@@ -227,8 +239,13 @@ export class ExpressionEvaluator {
       ),
     ]);
 
-    if (typeof fn === 'function') {
-      return fn(...args);
+    if (typeof fn.value === 'function') {
+      return {
+        value: await Promise.resolve(fn.value(...args.map(arg => arg.value))),
+        nodes: 1 + args.reduce((prev, curr) => prev + curr.nodes, 0),
+        functionCalls:
+          1 + args.reduce((prev, curr) => prev + curr.functionCalls, 0),
+      };
     } else {
       throw new ExpressionError('Cannot call a non-function');
     }
@@ -236,14 +253,15 @@ export class ExpressionEvaluator {
 
   private async evalCompoundExpression(
     expression: Compound,
-  ): Promise<ExpressionReturnType> {
-    let result: ExpressionReturnType | undefined;
+  ): Promise<ExpressionResult> {
+    let result: ExpressionResult | undefined;
 
     for (const item of expression.body) {
       result = await this.evalExpression(item);
     }
 
     if (result !== undefined) {
+      result.nodes += expression.body.length;
       return result;
     } else {
       throw new ExpressionError('Compound expression cannot be empty');
@@ -252,69 +270,108 @@ export class ExpressionEvaluator {
 
   private async evalConditionalExpression(
     expression: ConditionalExpression,
-  ): Promise<ExpressionReturnType> {
-    const [test, consequent, alternate] = await Promise.all([
-      this.evalExpression(expression.test),
-      this.evalExpression(expression.consequent),
-      this.evalExpression(expression.alternate),
-    ]);
+  ): Promise<ExpressionResult> {
+    const test = await this.evalExpression(expression.test);
+    const result = await this.evalExpression(
+      test ? expression.consequent : expression.alternate,
+    );
 
-    return test ? consequent : alternate;
+    return {
+      value: result.value,
+      nodes: 1 + test.nodes + result.nodes,
+      functionCalls: test.functionCalls + result.functionCalls,
+    };
   }
 
-  private evalIdentifierExpression(
-    expression: Identifier,
-  ): ExpressionReturnType {
+  private evalIdentifierExpression(expression: Identifier): ExpressionResult {
     const value = this._context[expression.name];
 
     if (value !== undefined) {
-      return value;
+      return {
+        value,
+        nodes: 1,
+        functionCalls: 0,
+      };
     } else {
       throw new ExpressionError(`Identifier (${expression.name}) not found`);
     }
   }
 
-  private evalLiteralExpression(expression: Literal): SimpleType {
-    return expression.value;
+  private evalLiteralExpression(
+    expression: Literal,
+  ): ExpressionResult<SimpleType> {
+    return {
+      value: expression.value,
+      nodes: 1,
+      functionCalls: 0,
+    };
   }
 
   private async evalLogicalExpression(
     expression: LogicalExpression,
-  ): Promise<ExpressionReturnType> {
-    const [left, right] = await Promise.all([
-      this.evalExpression(expression.left),
-      this.evalExpression(expression.right),
-    ]);
+  ): Promise<ExpressionResult> {
+    const left = await this.evalExpression(expression.left);
+    let right: ExpressionResult | undefined;
+    let value: ExpressionReturnType;
 
     switch (expression.operator) {
       case '||':
-        return left || right;
+        if (left.value) {
+          value = left.value;
+        } else {
+          right = await this.evalExpression(expression.right);
+          value = right.value;
+        }
+        break;
       case '&&':
-        return left && right;
+        if (!left.value) {
+          value = left.value;
+        } else {
+          right = await this.evalExpression(expression.right);
+          value = right.value;
+        }
+        break;
       default:
         throw new ExpressionError(
           `Logical operator ${expression.operator} is invalid`,
         );
     }
+
+    return {
+      value,
+      nodes: 1 + left.nodes + (right ? right.nodes : 0),
+      functionCalls: left.functionCalls + (right ? right.functionCalls : 0),
+    };
   }
 
   private async evalMemberExpression(
     expression: MemberExpression,
-  ): Promise<ExpressionReturnType> {
+  ): Promise<ExpressionResult> {
     const [value, property] = await Promise.all([
       this.evalExpression(expression.object),
       expression.property.type === 'Identifier'
-        ? (expression.property as Identifier).name
+        ? {
+            value: (expression.property as Identifier).name,
+            nodes: 1,
+            functionCalls: 0,
+          }
         : this.evalExpression(expression.property),
     ]);
 
-    if (typeof property !== 'string' && typeof property !== 'number') {
+    if (
+      typeof property.value !== 'string' &&
+      typeof property.value !== 'number'
+    ) {
       throw new ExpressionError(`Cannot index with type ${typeof property}`);
     }
 
-    if (typeof value === 'object') {
-      if (value.hasOwnProperty(property)) {
-        return (value as any)[property];
+    if (typeof value.value === 'object') {
+      if (value.value.hasOwnProperty(property.value)) {
+        return {
+          value: (value.value as any)[property.value],
+          nodes: 1 + value.nodes + property.nodes,
+          functionCalls: value.functionCalls + property.functionCalls,
+        };
       } else {
         throw new ExpressionError(`Value does not have property ${property}`);
       }
@@ -323,28 +380,61 @@ export class ExpressionEvaluator {
     }
   }
 
-  private evalThisExpression(): TypeMap {
-    return this._context;
+  private evalThisExpression(): ExpressionResult<TypeMap> {
+    return {
+      value: this._context,
+      nodes: 0, // Doing `this.` doesn't actually add anything to complexity.
+      functionCalls: 0,
+    };
   }
 
   private async evalUnaryExpression(
     expression: UnaryExpression,
-  ): Promise<number | boolean> {
-    const value = await this.evalExpression(expression.argument);
+  ): Promise<ExpressionResult<number | boolean>> {
+    const result = await this.evalExpression(expression.argument);
+    let value: number | boolean;
 
     switch (expression.operator) {
       case '-':
-        return -value;
-      case '!':
-        return !value;
       case '~':
-        return ~value;
       case '+':
-        return +value;
+        if (
+          typeof result.value === 'number' ||
+          typeof result.value === 'bigint'
+        ) {
+          switch (expression.operator) {
+            case '-':
+              value = -result.value;
+              break;
+            case '~':
+              value = ~result.value;
+              break;
+            case '+':
+              value = result.value;
+              break;
+            default:
+              // We should never get here.
+              throw new ExpressionError('???');
+          }
+        } else {
+          throw new ExpressionError(
+            `Cannot perform ${expression.operator} on non-number`,
+          );
+        }
+        break;
+      case '!':
+        value = !result.value;
+        break;
       default:
         throw new ExpressionError(
           `Unary operator ${expression.operator} is invalid`,
         );
     }
+
+    return {
+      value,
+      nodes: 1 + result.nodes,
+      functionCalls: result.functionCalls,
+    };
   }
 }
