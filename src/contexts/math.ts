@@ -44,7 +44,7 @@ export const MathContext: TypeMap = {
 function sum(args: number[]): number {
   return args.reduce((previousValue, currentValue) => {
     return currentValue + previousValue;
-  });
+  }, 0);
 }
 
 function avg(args: number[]): number {
