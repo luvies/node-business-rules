@@ -25,8 +25,6 @@ export interface RuleResults {
 export class Rules {
   private context: TypeMap;
   private previous?: Map<string, ExpressionReturnType>;
-  private graph = new DependencyGraph([]);
-  private resultListener = new ResultListener<RuleResult>();
   private rules = new Map<string, Rule>();
 
   public constructor(
@@ -57,11 +55,13 @@ export class Rules {
   }
 
   public async eval(): Promise<RuleResults> {
-    this.graph = new DependencyGraph(Array.from(this.rules.keys()));
-    this.resultListener = new ResultListener<RuleResult>();
+    const graph = new DependencyGraph(Array.from(this.rules.keys()));
+    const resultListener = new ResultListener<RuleResult>();
 
     const rawResults = await Promise.all(
-      Array.from(this.rules).map(([id, rule]) => this.evalRule(id, rule)),
+      Array.from(this.rules).map(([id, rule]) =>
+        this.evalRule(id, rule, graph, resultListener),
+      ),
     );
 
     const results = new Map<string, ExpressionReturnType>();
@@ -82,13 +82,18 @@ export class Rules {
     };
   }
 
-  private async evalRule(id: string, rule: Rule): Promise<RuleResult> {
+  private async evalRule(
+    id: string,
+    rule: Rule,
+    graph: DependencyGraph,
+    resultListener: ResultListener<RuleResult>,
+  ): Promise<RuleResult> {
     const context = {
       rule: async (targetId: string) => {
         // First check if it will create a circular dependency.
         // This throws an error if it will otherwise stores it.
-        this.graph.addDependency(id, targetId);
-        const ruleResult = await this.resultListener.wait(targetId);
+        graph.addDependency(id, targetId);
+        const ruleResult = await resultListener.wait(targetId);
         return ruleResult.value;
       },
       Math: MathContext,
@@ -110,7 +115,7 @@ export class Rules {
       activated: isActivated && !wasActivated,
     };
 
-    this.resultListener.onResult(id, result);
+    resultListener.onResult(id, result);
 
     return result;
   }
