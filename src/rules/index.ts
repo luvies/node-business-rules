@@ -20,6 +20,7 @@ export interface RuleResults {
   results: Map<string, ExpressionReturnType>;
   // Rules that have been activated since the last run.
   activated: string[];
+  deactivated: string[];
 }
 
 export class Rules {
@@ -72,6 +73,14 @@ export class Rules {
         activated.push(rawResult.id);
       }
     }
+    const deactivated: string[] = [];
+    if (this.previous) {
+      for (const id of this.previous.keys()) {
+        if (this.previous.get(id) === true && results.get(id) !== true) {
+          deactivated.push(id);
+        }
+      }
+    }
 
     // Persist the state across runs so rules aren't constantly re-activated.
     this.previous = results;
@@ -79,6 +88,7 @@ export class Rules {
     return {
       results,
       activated,
+      deactivated,
     };
   }
 

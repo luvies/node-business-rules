@@ -62,15 +62,18 @@ describe('Rules', () => {
       getValue: () => value++,
     });
     rules.set('ruleA', {
-      expression: `getValue() > 0`,
+      expression: `getValue() === 1`,
     });
     const resultsA = await rules.eval();
     expect(resultsA.activated.length).toBe(0);
+    expect(resultsA.deactivated.length).toBe(0);
 
     const resultsB = await rules.eval();
     expect(resultsB.activated.length).toBe(1);
+    expect(resultsB.deactivated.length).toBe(0);
 
     const resultsC = await rules.eval();
     expect(resultsC.activated.length).toBe(0);
+    expect(resultsC.deactivated.length).toBe(1);
   });
 });
