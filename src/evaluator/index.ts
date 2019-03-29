@@ -22,7 +22,7 @@ export {
 };
 
 export class Evaluator {
-  public constructor(public evaluatorOptions: EvaluatorOptions) {}
+  public constructor(public options: EvaluatorOptions) {}
 
   public async eval(expression: string): Promise<ExpressionResult> {
     const ast = jsep(expression);
@@ -33,7 +33,7 @@ export class Evaluator {
   public async evalExpression(
     expression: BaseExpression,
   ): Promise<ExpressionResult> {
-    const expressionEvaluator = new ExpressionEvaluator(this.evaluatorOptions);
+    const expressionEvaluator = new ExpressionEvaluator(this.options);
 
     return expressionEvaluator.evalExpression(expression);
   }

@@ -61,7 +61,7 @@ describe('Evaluator', () => {
   });
 
   it('evaluates identifiers', async () => {
-    evaluator.evaluatorOptions.context = {
+    evaluator.options.context = {
       a: 'a',
       b: 'b',
       c: 1,
