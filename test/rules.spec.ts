@@ -1,4 +1,4 @@
-import { Rules } from '../src/rules';
+import { Rules } from '../src';
 
 describe('Rules', () => {
   it('Math context exists', async () => {

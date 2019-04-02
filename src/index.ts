@@ -1,26 +1,5 @@
-import { Evaluator } from './evaluator';
+import * as contexts from './contexts';
 
-async function main() {
-  const context = {
-    a: 1,
-    b: 2,
-    c: 3,
-    sum(a: number, b: number): number {
-      return a + b;
-    },
-    root: {
-      fn() {
-        return Promise.resolve(4);
-      },
-    },
-  };
-
-  const evaluator = new Evaluator({ context });
-
-  console.log(await evaluator.eval(`sum(a, b) + c + root.fn()`));
-}
-
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+export * from './evaluator';
+export * from './rules';
+export { contexts };

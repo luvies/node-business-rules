@@ -1,4 +1,4 @@
-import { Evaluator, ExpressionReturnType } from '../src/evaluator';
+import { Evaluator, ExpressionReturnType } from '../src';
 
 let evaluator: Evaluator;
 
