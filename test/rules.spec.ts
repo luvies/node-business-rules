@@ -22,6 +22,22 @@ describe('Rules', () => {
     expect(results.results.get('answer')).toBe(2);
   });
 
+  it('Alias dependency', async () => {
+    const rules = new Rules();
+
+    rules.set('__base__', {
+      expression: `Math.max([1, 2])`,
+    });
+    rules.set('answer', {
+      expression: `rule('a') + rule('b')`,
+    });
+    rules.aliases.set('a', '__base__');
+    rules.aliases.set('b', '__base__');
+
+    const results = await rules.eval();
+    expect(results.results.get('answer')).toBe(4);
+  });
+
   it('Activated rule', async () => {
     const rules = new Rules();
     rules.set('utility', {

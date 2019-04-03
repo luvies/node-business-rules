@@ -23,17 +23,22 @@ export interface RuleResults {
   deactivated: string[];
 }
 
+export interface RulesOptions {
+  previous?: Map<string, ExpressionReturnType>;
+  aliases?: Map<string, string>;
+}
+
 export class Rules {
+  public aliases: Map<string, string>;
+
   private context: TypeMap;
   private previous?: Map<string, ExpressionReturnType>;
   private rules = new Map<string, Rule>();
 
-  public constructor(
-    context: TypeMap = {},
-    previous?: Map<string, ExpressionReturnType>,
-  ) {
+  public constructor(context: TypeMap = {}, options: RulesOptions = {}) {
     this.context = context;
-    this.previous = previous;
+    this.previous = options.previous;
+    this.aliases = options.aliases || new Map();
   }
 
   public set(id: string, rule: Rule) {
@@ -100,6 +105,15 @@ export class Rules {
   ): Promise<RuleResult> {
     const context = {
       rule: async (targetId: string) => {
+        // Resolve aliases.
+        if (this.aliases) {
+          const alias = this.aliases.get(targetId);
+
+          if (alias !== undefined) {
+            targetId = alias;
+          }
+        }
+
         // First check if it will create a circular dependency.
         // This throws an error if it will otherwise stores it.
         graph.addDependency(id, targetId);
