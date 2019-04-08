@@ -391,8 +391,8 @@ export class ExpressionEvaluator {
     }
 
     if (this._memberChecks) {
-      for (const checkFn of this._memberChecks) {
-        if (checkFn(value.value, property.value)) {
+      for (const memberCheckFn of this._memberChecks) {
+        if (memberCheckFn(value.value, property.value)) {
           let val = (value.value as any)[property.value];
 
           // If the resolved value is a function, we need to bind it
