@@ -393,8 +393,16 @@ export class ExpressionEvaluator {
     if (this._memberChecks) {
       for (const checkFn of this._memberChecks) {
         if (checkFn(value.value, property.value)) {
+          let val = (value.value as any)[property.value];
+
+          // If the resolved value is a function, we need to bind it
+          // to the object in order to preserve the 'this' reference.
+          if (typeof val === 'function') {
+            val = val.bind(value.value);
+          }
+
           return {
-            value: (value.value as any)[property.value],
+            value: val,
             nodes: 1 + value.nodes + property.nodes,
             functionCalls: value.functionCalls + property.functionCalls,
           };
