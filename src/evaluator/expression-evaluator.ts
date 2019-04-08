@@ -374,7 +374,7 @@ export class ExpressionEvaluator {
   ): Promise<ExpressionResult> {
     const [value, property] = await Promise.all([
       this.evalExpression(expression.object),
-      expression.property.type === 'Identifier'
+      !expression.computed && expression.property.type === 'Identifier'
         ? {
             value: (expression.property as Identifier).name,
             nodes: 1,
