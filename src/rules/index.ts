@@ -1,5 +1,14 @@
+import { StringContext } from '../contexts';
+import { ConvertContext } from '../contexts/convert';
 import { MathContext } from '../contexts/math';
-import { Evaluator, ExpressionReturnType, TypeMap } from '../evaluator';
+import {
+  Evaluator,
+  ExpressionReturnType,
+  objectOwnPropertyMemberCheck,
+  stringIndexMemberCheck,
+  stringMethodMemberCheck,
+  TypeMap,
+} from '../evaluator';
 import { DependencyGraph } from './dependency-graph';
 import { ResultListener } from './result-listener';
 
@@ -103,28 +112,39 @@ export class Rules {
     graph: DependencyGraph,
     resultListener: ResultListener<RuleResult>,
   ): Promise<RuleResult> {
-    const context = {
-      rule: async (targetId: string) => {
-        // Resolve aliases.
-        if (this.aliases) {
-          const alias = this.aliases.get(targetId);
+    const evaluator = new Evaluator({
+      // Build up context using custom functions and various defaults.
+      context: {
+        rule: async (targetId: string) => {
+          // Resolve aliases.
+          if (this.aliases) {
+            const alias = this.aliases.get(targetId);
 
-          if (alias !== undefined) {
-            targetId = alias;
+            if (alias !== undefined) {
+              targetId = alias;
+            }
           }
-        }
 
-        // First check if it will create a circular dependency.
-        // This throws an error if it will otherwise stores it.
-        graph.addDependency(id, targetId);
-        const ruleResult = await resultListener.wait(targetId);
-        return ruleResult.value;
+          // First check if it will create a circular dependency.
+          // This throws an error if it will otherwise stores it.
+          graph.addDependency(id, targetId);
+          const ruleResult = await resultListener.wait(targetId);
+          return ruleResult.value;
+        },
+        Math: MathContext,
+        String: StringContext,
+        Convert: ConvertContext,
+        ...this.context,
+        ...rule.context,
       },
-      Math: MathContext,
-      ...this.context,
-      ...rule.context,
-    };
-    const evaluator = new Evaluator({ context });
+      // Load in standard member checks.
+      memberChecks: [
+        objectOwnPropertyMemberCheck,
+        stringMethodMemberCheck,
+        stringIndexMemberCheck,
+      ],
+    });
+
     const evaluatorResult = await evaluator.eval(rule.expression);
     const value = evaluatorResult.value;
 

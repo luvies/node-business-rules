@@ -17,14 +17,8 @@
     "noUnusedParameters": true,
     "strict": true,
     "outDir": "./dist",
-    "alwaysStrict": true,
-    "baseUrl": ".",
+    "alwaysStrict": true
   },
-  "include": [
-    "src/**/*.ts",
-    "types/**/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*.ts", "types/**/*.d.ts"],
+  "exclude": ["node_modules"]
 }
