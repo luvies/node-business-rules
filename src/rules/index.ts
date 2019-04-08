@@ -1,3 +1,5 @@
+import { StringContext } from '../contexts';
+import { ConvertContext } from '../contexts/convert';
 import { MathContext } from '../contexts/math';
 import {
   Evaluator,
@@ -130,6 +132,8 @@ export class Rules {
           return ruleResult.value;
         },
         Math: MathContext,
+        String: StringContext,
+        Convert: ConvertContext,
         ...this.context,
         ...rule.context,
       },

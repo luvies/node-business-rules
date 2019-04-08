@@ -41,7 +41,8 @@ export type ExpressionReturnType =
   | SimpleType
   | ArrayType
   | FunctionType
-  | TypeMap;
+  | TypeMap
+  | object;
 
 export interface ExpressionResult<T = ExpressionReturnType> {
   value: T;
