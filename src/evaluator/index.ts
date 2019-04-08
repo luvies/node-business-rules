@@ -10,6 +10,8 @@ import {
   TypeMap,
 } from './expression-evaluator';
 
+export * from './member-checks';
+
 export {
   ArrayType,
   EvaluatorOptions,
