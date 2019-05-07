@@ -195,6 +195,7 @@ export class ExpressionEvaluator {
               break;
             case '>=':
               value = left.value >= right.value;
+              break;
             case '-':
               value = left.value - right.value;
               break;
