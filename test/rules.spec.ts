@@ -92,4 +92,18 @@ describe('Rules', () => {
     expect(resultsC.activated.length).toBe(0);
     expect(resultsC.deactivated.length).toBe(1);
   });
+
+  it('Context fetch', async () => {
+    let temperature = 219;
+    const rules = new Rules({
+      latest: () => temperature++,
+    });
+    rules.set('ruleA', {
+      expression: `latest('temperature') >= 220`,
+    });
+    const first = await rules.eval();
+    expect(first.results.get('ruleA')).toBe(false);
+    const second = await rules.eval();
+    expect(second.results.get('ruleA')).toBe(true);
+  });
 });
