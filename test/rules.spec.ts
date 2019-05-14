@@ -106,4 +106,22 @@ describe('Rules', () => {
     const second = await rules.eval();
     expect(second.results.get('ruleA')).toBe(true);
   });
+
+  it('Method getter access sub-object', async () => {
+    const rules = new Rules({
+      sad: () => {
+        return {
+          range: {
+            min: 0,
+            max: 10
+          }
+        };
+      }
+    });
+    rules.set('rule', {
+      expression: `sad().range.max`,
+    });
+    const results = await rules.eval();
+    expect(results.results.get('rule')).toBe(10);
+  });
 });
