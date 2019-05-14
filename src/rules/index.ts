@@ -20,9 +20,10 @@ export interface Rule {
 
 export interface RuleResult {
   id: string;
-  value: ExpressionReturnType;
   rule: Rule;
-  activated: boolean;
+  value?: ExpressionReturnType;
+  activated?: boolean;
+  error?: Error;
 }
 
 export interface RuleResults {
@@ -81,17 +82,15 @@ export class Rules {
 
     const results = new Map<string, ExpressionReturnType>();
     const activated: string[] = [];
-    for (const rawResult of rawResults) {
-      results.set(rawResult.id, rawResult.value);
-      if (rawResult.activated) {
-        activated.push(rawResult.id);
-      }
-    }
     const deactivated: string[] = [];
-    if (this.previous) {
-      for (const id of this.previous.keys()) {
-        if (this.previous.get(id) === true && results.get(id) !== true) {
-          deactivated.push(id);
+
+    for (const rawResult of rawResults) {
+      if (!rawResult.error) {
+        results.set(rawResult.id, rawResult.value!);
+        if (rawResult.activated) {
+          activated.push(rawResult.id);
+        } else if (this.previous && this.previous.get(rawResult.id)) {
+          deactivated.push(rawResult.id);
         }
       }
     }
@@ -145,19 +144,21 @@ export class Rules {
       ],
     });
 
-    const evaluatorResult = await evaluator.eval(rule.expression);
-    const value = evaluatorResult.value;
-
-    // Specifically true so utility rules aren't activated.
-    const wasActivated = this.previous && this.previous.get(id) === true;
-    const isActivated = value === true;
-
-    const result = {
+    const result: RuleResult = {
       id,
-      value,
       rule,
-      activated: isActivated && !wasActivated,
     };
+
+    try {
+      const evaluatorResult = await evaluator.eval(rule.expression);
+      result.value = evaluatorResult.value;
+
+      // Specifically true so utility rules aren't activated.
+      const wasActivated = this.previous && this.previous.get(id) === true;
+      result.activated = result.value === true && !wasActivated;
+    } catch (err) {
+      result.error = err;
+    }
 
     resultListener.onResult(id, result);
 

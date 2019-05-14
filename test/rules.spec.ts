@@ -113,10 +113,10 @@ describe('Rules', () => {
         return {
           range: {
             min: 0,
-            max: 10
-          }
+            max: 10,
+          },
         };
-      }
+      },
     });
     rules.set('rule', {
       expression: `sad().range.max`,
