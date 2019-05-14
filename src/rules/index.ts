@@ -31,6 +31,7 @@ export interface RuleResults {
   // Rules that have been activated since the last run.
   activated: string[];
   deactivated: string[];
+  errors: Map<string, Error>;
 }
 
 export interface RulesOptions {
@@ -83,6 +84,7 @@ export class Rules {
     const results = new Map<string, ExpressionReturnType>();
     const activated: string[] = [];
     const deactivated: string[] = [];
+    const errors = new Map<string, Error>();
 
     for (const rawResult of rawResults) {
       if (!rawResult.error) {
@@ -92,6 +94,8 @@ export class Rules {
         } else if (this.previous && this.previous.get(rawResult.id)) {
           deactivated.push(rawResult.id);
         }
+      } else {
+        errors.set(rawResult.id, rawResult.error);
       }
     }
 
@@ -102,6 +106,7 @@ export class Rules {
       results,
       activated,
       deactivated,
+      errors,
     };
   }
 

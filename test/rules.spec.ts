@@ -124,4 +124,26 @@ describe('Rules', () => {
     const results = await rules.eval();
     expect(results.results.get('rule')).toBe(10);
   });
+
+  it('Parallel failure handling', async () => {
+    const rules = new Rules({
+      fail: () => {
+        throw new Error('An error has ocurred!');
+      },
+    });
+
+    rules.set('pass', {
+      expression: `10 > 5`,
+    });
+
+    rules.set('fail', {
+      expression: `fail()`,
+    });
+
+    const results = await rules.eval();
+    expect(results.results.get('pass')).toBe(true);
+    expect(results.results.get('fail')).toBe(undefined);
+    expect(results.errors.get('fail')).toBeDefined();
+    expect(results.errors.get('fail')!.message).toBe('An error has ocurred!');
+  });
 });
