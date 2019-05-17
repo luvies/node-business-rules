@@ -89,10 +89,16 @@ export class Rules {
     for (const rawResult of rawResults) {
       if (!rawResult.error) {
         results.set(rawResult.id, rawResult.value!);
+        const wasActivated =
+          this.previous && this.previous.get(rawResult.id) === true;
         if (rawResult.activated) {
-          activated.push(rawResult.id);
-        } else if (this.previous && this.previous.get(rawResult.id)) {
-          deactivated.push(rawResult.id);
+          if (!wasActivated) {
+            activated.push(rawResult.id);
+          }
+        } else {
+          if (wasActivated) {
+            deactivated.push(rawResult.id);
+          }
         }
       } else {
         errors.set(rawResult.id, rawResult.error);
@@ -159,8 +165,7 @@ export class Rules {
       result.value = evaluatorResult.value;
 
       // Specifically true so utility rules aren't activated.
-      const wasActivated = this.previous && this.previous.get(id) === true;
-      result.activated = result.value === true && !wasActivated;
+      result.activated = result.value === true;
     } catch (err) {
       result.error = err;
     }

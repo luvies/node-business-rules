@@ -39,22 +39,48 @@ describe('Rules', () => {
   });
 
   it('Activated rule', async () => {
-    const rules = new Rules();
+    const context = {
+      value: 5,
+    };
+    const rules = new Rules(context);
     rules.set('utility', {
       expression: `[10]`,
     });
     rules.set('activated', {
-      expression: `10 > 5`,
+      expression: `10 > value`,
     });
     rules.set('deactivated', {
       expression: `5 > 10`,
     });
 
-    const results = await rules.eval();
+    let results = await rules.eval();
     expect(results.results.get('utility')).toEqual([10]);
     expect(results.results.get('activated')).toBe(true);
     expect(results.results.get('deactivated')).toBe(false);
     expect(results.activated).toEqual(['activated']);
+    expect(results.deactivated).toEqual([]);
+
+    results = await rules.eval();
+    expect(results.results.get('utility')).toEqual([10]);
+    expect(results.results.get('activated')).toBe(true);
+    expect(results.results.get('deactivated')).toBe(false);
+    expect(results.activated).toEqual([]);
+    expect(results.deactivated).toEqual([]);
+
+    context.value = 11;
+    results = await rules.eval();
+    expect(results.results.get('utility')).toEqual([10]);
+    expect(results.results.get('activated')).toBe(false);
+    expect(results.results.get('deactivated')).toBe(false);
+    expect(results.activated).toEqual([]);
+    expect(results.deactivated).toEqual(['activated']);
+
+    results = await rules.eval();
+    expect(results.results.get('utility')).toEqual([10]);
+    expect(results.results.get('activated')).toBe(false);
+    expect(results.results.get('deactivated')).toBe(false);
+    expect(results.activated).toEqual([]);
+    expect(results.deactivated).toEqual([]);
   });
 
   it('Accepts custom context', async () => {
