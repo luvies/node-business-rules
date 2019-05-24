@@ -6,31 +6,7 @@ export interface LiteralArray extends Array<LiteralType> {}
 export type LiteralType = string | number | boolean | LiteralArray;
 
 export class FunctionCall {
-  public static flattenNestedCalls(
-    calls: readonly FunctionCall[],
-  ): FunctionCall[] {
-    return calls
-      .map(FunctionCall.getAllFunctionCalls)
-      .reduce((prev, curr) => prev.concat(curr), []);
-  }
-
-  public static getAllFunctionCalls(call: FunctionCall): FunctionCall[] {
-    const nestedCalls = [call];
-
-    if (FunctionCall.isFunctionCall(call.name)) {
-      nestedCalls.push(call.name);
-    }
-
-    for (const arg of call.args) {
-      if (FunctionCall.isFunctionCall(arg)) {
-        nestedCalls.push(...FunctionCall.getAllFunctionCalls(arg));
-      }
-    }
-
-    return nestedCalls;
-  }
-
-  private static isFunctionCall(obj: unknown): obj is FunctionCall {
+  public static isFunctionCall(obj: unknown): obj is FunctionCall {
     return obj instanceof FunctionCall;
   }
 
