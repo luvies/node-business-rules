@@ -1,4 +1,4 @@
-import jsep, { Expression as BaseExpression } from 'jsep';
+import jsep, { Expression } from 'jsep';
 import { ExpressionError } from './expression-error';
 import {
   ArrayType,
@@ -33,7 +33,7 @@ export class Evaluator {
   }
 
   public async evalExpression(
-    expression: BaseExpression,
+    expression: Expression,
   ): Promise<ExpressionResult> {
     const expressionEvaluator = new ExpressionEvaluator(this.options);
 

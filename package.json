@@ -16,7 +16,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "prepublishOnly": "yarn build && yarn test",
-    "postpublish": "git push && git push --tags"
+    "postpublish": "git push && git push --tags",
+    "postinstall": "rm -rf ./node_modules/jsep/typings/*"
   },
   "dependencies": {
     "jsep": "^0.3.4"

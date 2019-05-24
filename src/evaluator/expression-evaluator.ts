@@ -4,28 +4,14 @@ import {
   CallExpression,
   Compound,
   ConditionalExpression,
-  Expression as BaseExpression,
+  Expression,
   Identifier,
   Literal,
   LogicalExpression,
   MemberExpression,
-  ThisExpression,
   UnaryExpression,
 } from 'jsep';
 import { ExpressionError } from './expression-error';
-
-type Expression =
-  | ArrayExpression
-  | BinaryExpression
-  | CallExpression
-  | Compound
-  | ConditionalExpression
-  | Identifier
-  | Literal
-  | LogicalExpression
-  | MemberExpression
-  | ThisExpression
-  | UnaryExpression;
 
 export interface TypeMap extends Record<string, ExpressionReturnType> {}
 
@@ -78,10 +64,8 @@ export class ExpressionEvaluator {
   }
 
   public async evalExpression(
-    baseExpression: BaseExpression,
+    expression: Expression,
   ): Promise<ExpressionResult> {
-    const expression: Expression = baseExpression as any;
-
     switch (expression.type) {
       case 'ArrayExpression':
         return this.evalArrayExpression(expression);
@@ -107,7 +91,7 @@ export class ExpressionEvaluator {
         return this.evalUnaryExpression(expression);
       default:
         throw new ExpressionError(
-          `Expression type ${baseExpression.type} is invalid`,
+          `Expression type ${(expression as any).type} is invalid`,
         );
     }
   }
@@ -375,13 +359,13 @@ export class ExpressionEvaluator {
   ): Promise<ExpressionResult> {
     const [value, property] = await Promise.all([
       this.evalExpression(expression.object),
-      !expression.computed && expression.property.type === 'Identifier'
-        ? {
-            value: (expression.property as Identifier).name,
+      expression.computed
+        ? this.evalExpression(expression.property)
+        : {
+            value: expression.property.name,
             nodes: 1,
             functionCalls: 0,
-          }
-        : this.evalExpression(expression.property),
+          },
     ]);
 
     if (
