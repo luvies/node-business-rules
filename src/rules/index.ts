@@ -1,6 +1,4 @@
-import { StringContext } from '../contexts';
-import { ConvertContext } from '../contexts/convert';
-import { MathContext } from '../contexts/math';
+import { ConvertContext, MathContext, StringContext } from '../contexts';
 import {
   Evaluator,
   ExpressionReturnType,
