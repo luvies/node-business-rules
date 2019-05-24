@@ -11,6 +11,7 @@ import {
   MemberExpression,
   UnaryExpression,
 } from 'jsep';
+import { ExpressionError } from './expression-error';
 import {
   ArrayType,
   EvaluatorOptions,
@@ -19,8 +20,7 @@ import {
   MemberCheckFn,
   SimpleType,
   TypeMap,
-} from './eval-types';
-import { ExpressionError } from './expression-error';
+} from './utils';
 import { canAccessMember } from './utils';
 
 export class ExpressionEvaluator {

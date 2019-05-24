@@ -1,4 +1,4 @@
-import { ExpressionReturnType } from './eval-types';
+import { ExpressionReturnType } from './utils';
 
 /**
  * Checks whether the identifier exists as an own property on the

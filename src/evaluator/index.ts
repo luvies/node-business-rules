@@ -1,8 +1,7 @@
 import jsep, { Expression } from 'jsep';
-import { EvaluatorOptions, ExpressionResult } from './eval-types';
 import { ExpressionEvaluator } from './expression-evaluator';
+import { EvaluatorOptions, ExpressionResult } from './utils';
 
-export * from './eval-types';
 export * from './expression-error';
 export * from './expression-evaluator';
 export * from './member-checks';
