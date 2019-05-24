@@ -1,27 +1,12 @@
 import jsep, { Expression } from 'jsep';
-import { ExpressionError } from './expression-error';
-import {
-  ArrayType,
-  EvaluatorOptions,
-  ExpressionEvaluator,
-  ExpressionResult,
-  ExpressionReturnType,
-  SimpleType,
-  TypeMap,
-} from './expression-evaluator';
+import { EvaluatorOptions, ExpressionResult } from './eval-types';
+import { ExpressionEvaluator } from './expression-evaluator';
 
+export * from './eval-types';
+export * from './expression-error';
+export * from './expression-evaluator';
 export * from './member-checks';
-
-export {
-  ArrayType,
-  EvaluatorOptions,
-  ExpressionError,
-  ExpressionEvaluator,
-  ExpressionResult,
-  ExpressionReturnType,
-  SimpleType,
-  TypeMap,
-};
+export * from './utils';
 
 export class Evaluator {
   public constructor(public options: EvaluatorOptions) {}

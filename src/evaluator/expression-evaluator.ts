@@ -11,48 +11,17 @@ import {
   MemberExpression,
   UnaryExpression,
 } from 'jsep';
+import {
+  ArrayType,
+  EvaluatorOptions,
+  ExpressionResult,
+  ExpressionReturnType,
+  MemberCheckFn,
+  SimpleType,
+  TypeMap,
+} from './eval-types';
 import { ExpressionError } from './expression-error';
-
-export interface TypeMap extends Record<string, ExpressionReturnType> {}
-
-export type SimpleType = string | number | boolean;
-
-export type FunctionType = (
-  ...args: any[]
-) => ExpressionReturnType | Promise<ExpressionReturnType>;
-
-export interface ArrayType extends Array<ExpressionReturnType> {}
-
-export type ExpressionReturnType =
-  | SimpleType
-  | ArrayType
-  | FunctionType
-  | TypeMap
-  | object;
-
-export interface ExpressionResult<T = ExpressionReturnType> {
-  value: T;
-  nodes: number;
-  functionCalls: number;
-}
-
-export type MemberCheckFn = (
-  value: ExpressionReturnType,
-  ident: string | number,
-) => boolean;
-
-export interface EvaluatorOptions {
-  /**
-   * The context of the expression.
-   */
-  context: TypeMap;
-  /**
-   * An iterable of functions that check whether the given identifier can be used to
-   * index the given value.
-   * If any of these return true, then the indexing operation is allowed.
-   */
-  memberChecks?: Iterable<MemberCheckFn>;
-}
+import { canAccessMember } from './utils';
 
 export class ExpressionEvaluator {
   private readonly _context: TypeMap;
@@ -375,31 +344,29 @@ export class ExpressionEvaluator {
       throw new ExpressionError(`Cannot index with type ${typeof property}`);
     }
 
-    if (this._memberChecks) {
-      for (const memberCheckFn of this._memberChecks) {
-        if (memberCheckFn(value.value, property.value)) {
-          let val = (value.value as any)[property.value];
+    if (canAccessMember(this._memberChecks, value.value, property.value)) {
+      let val = (value.value as any)[property.value];
 
-          // If the resolved value is a function, we need to bind it
-          // to the object in order to preserve the 'this' reference.
-          if (typeof val === 'function') {
-            val = val.bind(value.value);
-          }
-
-          return {
-            value: val,
-            nodes: 1 + value.nodes + property.nodes,
-            functionCalls: value.functionCalls + property.functionCalls,
-          };
-        }
+      // If the resolved value is a function, we need to bind it
+      // to the object in order to preserve the 'this' reference.
+      if (typeof val === 'function') {
+        val = val.bind(value.value);
       }
-    }
 
-    throw new ExpressionError(
-      `Not allowed to index ${value.value} (type: ${typeof value.value}) with ${
-        property.value
-      } (type: ${typeof property.value})`,
-    );
+      return {
+        value: val,
+        nodes: 1 + value.nodes + property.nodes,
+        functionCalls: value.functionCalls + property.functionCalls,
+      };
+    } else {
+      throw new ExpressionError(
+        `Not allowed to index ${
+          value.value
+        } (type: ${typeof value.value}) with ${
+          property.value
+        } (type: ${typeof property.value})`,
+      );
+    }
   }
 
   private evalThisExpression(): ExpressionResult<TypeMap> {
