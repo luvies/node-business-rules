@@ -1,6 +1,6 @@
 export interface TypeMap extends Record<string, ExpressionReturnType> {}
 
-export type SimpleType = string | number | boolean;
+export type SimpleType = string | number | boolean | undefined | null;
 
 export type FunctionType = (
   ...args: any[]

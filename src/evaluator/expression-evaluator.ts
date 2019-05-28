@@ -337,6 +337,14 @@ export class ExpressionEvaluator {
           },
     ]);
 
+    if (typeof value.value === 'undefined' || value.value === null) {
+      throw new ExpressionError(
+        `Cannot index ${
+          typeof value.value === 'undefined' ? 'undefined' : 'null'
+        }`,
+      );
+    }
+
     if (
       typeof property.value !== 'string' &&
       typeof property.value !== 'number'

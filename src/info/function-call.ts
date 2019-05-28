@@ -1,9 +1,5 @@
-import { SimpleType } from '../evaluator';
+import { ExpressionReturnType, SimpleType } from '../evaluator';
 import { RuntimeValue } from './runtime-value';
-
-export interface LiteralArray extends Array<LiteralType> {}
-
-export type LiteralType = string | number | boolean | LiteralArray;
 
 export class FunctionCall {
   public static isFunctionCall(obj: unknown): obj is FunctionCall {
@@ -20,7 +16,7 @@ export class FunctionCall {
      * All function calls in this are for reference only, as the main
      * function call array will contain every single found function.
      */
-    public args: Array<LiteralType | FunctionCall | RuntimeValue>,
+    public args: Array<ExpressionReturnType | FunctionCall | RuntimeValue>,
     /**
      * The resolved path of the function. If the function is being used at
      * root-level, then this will be an empty array.
