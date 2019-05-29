@@ -37,6 +37,11 @@ export interface EvaluatorOptions {
    * If any of these return true, then the indexing operation is allowed.
    */
   memberChecks?: Iterable<MemberCheckFn>;
+  /**
+   * A formatting function to use when creating error messages from values.
+   * Defaults to `String`.
+   */
+  valueFormatter?: (value: any) => string;
 }
 
 export function canAccessMember(

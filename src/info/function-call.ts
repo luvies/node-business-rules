@@ -2,10 +2,6 @@ import { ExpressionReturnType, SimpleType } from '../evaluator';
 import { RuntimeValue } from './runtime-value';
 
 export class FunctionCall {
-  public static isFunctionCall(obj: unknown): obj is FunctionCall {
-    return obj instanceof FunctionCall;
-  }
-
   public constructor(
     /**
      * The resolved name of the function.

@@ -26,10 +26,12 @@ import { canAccessMember } from './utils';
 export class ExpressionEvaluator {
   private readonly _context: TypeMap;
   private readonly _memberChecks?: Iterable<MemberCheckFn>;
+  private readonly _valueFormatter: (value: any) => string;
 
   public constructor(options: EvaluatorOptions) {
     this._context = options.context;
     this._memberChecks = options.memberChecks;
+    this._valueFormatter = options.valueFormatter || String;
   }
 
   public async evalExpression(
@@ -263,16 +265,16 @@ export class ExpressionEvaluator {
   }
 
   private evalIdentifierExpression(expression: Identifier): ExpressionResult {
-    const value = this._context[expression.name];
-
-    if (value !== undefined) {
+    if (Object.prototype.hasOwnProperty.call(this._context, expression.name)) {
       return {
-        value,
+        value: this._context[expression.name],
         nodes: 1,
         functionCalls: 0,
       };
     } else {
-      throw new ExpressionError(`Identifier (${expression.name}) not found`);
+      throw new ExpressionError(
+        `Identifier (${this._valueFormatter(expression.name)}) not found`,
+      );
     }
   }
 
@@ -368,11 +370,11 @@ export class ExpressionEvaluator {
       };
     } else {
       throw new ExpressionError(
-        `Not allowed to index ${
-          value.value
-        } (type: ${typeof value.value}) with ${
-          property.value
-        } (type: ${typeof property.value})`,
+        `Not allowed to index ${this._valueFormatter(
+          value.value,
+        )} (type: ${typeof value.value}) with ${this._valueFormatter(
+          property.value,
+        )} (type: ${typeof property.value})`,
       );
     }
   }
