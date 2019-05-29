@@ -10,6 +10,7 @@ import {
   MemberExpression,
   UnaryExpression,
 } from 'jsep';
+import jsep from 'jsep';
 import {
   canAccessMember,
   EvaluatorOptions,
@@ -24,6 +25,8 @@ import { RuntimeValue } from './runtime-value';
 export class ExpressionInfoCollector {
   private readonly _options?: EvaluatorOptions;
   private readonly _valueFormatter: (value: any) => string;
+
+  private _visited = new WeakSet<Expression>();
 
   public constructor({
     evalOpts,
@@ -42,7 +45,17 @@ export class ExpressionInfoCollector {
       valueFormatter || (evalOpts && evalOpts.valueFormatter) || String;
   }
 
-  public collect(expression: Expression): ExpressionInfo {
+  public collect(expression: Expression | string): ExpressionInfo {
+    this._visited = new WeakSet();
+
+    return this.collectExpression(
+      typeof expression === 'string' ? jsep(expression) : expression,
+    );
+  }
+
+  //////////// Collection methods ////////////
+
+  private collectExpression(expression: Expression): ExpressionInfo {
     switch (expression.type) {
       case 'ArrayExpression':
         return this.collectArrayExpression(expression);
@@ -69,11 +82,9 @@ export class ExpressionInfoCollector {
     }
   }
 
-  //////////// Collection methods ////////////
-
   private collectArrayExpression(expression: ArrayExpression): ExpressionInfo {
     return ExpressionInfo.merge(
-      expression.elements.map(element => this.collect(element)),
+      expression.elements.map(element => this.collectExpression(element)),
     );
   }
 
@@ -81,38 +92,33 @@ export class ExpressionInfoCollector {
     expression: BinaryExpression,
   ): ExpressionInfo {
     return ExpressionInfo.merge([
-      this.collect(expression.left),
-      this.collect(expression.right),
+      this.collectExpression(expression.left),
+      this.collectExpression(expression.right),
     ]);
   }
 
   private collectCallExpression(expression: CallExpression): ExpressionInfo {
-    const errors: ExpressionError[] = [];
     const fn = this.tryResolveCallExpression(expression);
-    const args = expression.arguments.map(arg => this.collect(arg));
-
-    // Resolve the errors from the callee.
-    // The actual result from this doesn't matter, we are only tracking
-    // the included errors.
-    this.tryResolveLiteral(expression.callee, errors);
+    const callee = this.collectExpression(expression.callee);
+    const args = expression.arguments.map(arg => this.collectExpression(arg));
 
     return ExpressionInfo.merge(
       fn instanceof FunctionCall
         ? [
             ExpressionInfo.empty({
               functionCalls: [fn],
-              errors,
             }),
+            callee,
             ...args,
           ]
-        : args,
+        : [callee, ...args],
     );
   }
 
   private collectCompoundExpression(expression: Compound): ExpressionInfo {
     if (expression.body.length > 0) {
       return ExpressionInfo.merge(
-        expression.body.map(item => this.collect(item)),
+        expression.body.map(item => this.collectExpression(item)),
       );
     } else {
       return ExpressionInfo.empty({
@@ -125,28 +131,20 @@ export class ExpressionInfoCollector {
     expression: ConditionalExpression,
   ): ExpressionInfo {
     return ExpressionInfo.merge([
-      this.collect(expression.test),
-      this.collect(expression.consequent),
-      this.collect(expression.alternate),
+      this.collectExpression(expression.test),
+      this.collectExpression(expression.consequent),
+      this.collectExpression(expression.alternate),
     ]);
   }
 
   private collectIdentifierExpression(expression: Identifier): ExpressionInfo {
     if (this._options) {
-      if (
-        Object.prototype.hasOwnProperty.call(
-          this._options.context,
-          expression.name,
-        )
-      ) {
-        return ExpressionInfo.empty();
-      } else {
-        return ExpressionInfo.empty({
-          errors: [
-            new ExpressionError(`Identifier (${expression.name}) not found`),
-          ],
-        });
-      }
+      const errors: ExpressionError[] = [];
+      this.tryResoveFromIdentifier(expression, errors);
+
+      return ExpressionInfo.empty({
+        errors,
+      });
     } else {
       return ExpressionInfo.empty();
     }
@@ -160,14 +158,16 @@ export class ExpressionInfoCollector {
     expression: LogicalExpression,
   ): ExpressionInfo {
     return ExpressionInfo.merge([
-      this.collect(expression.left),
-      this.collect(expression.right),
+      this.collectExpression(expression.left),
+      this.collectExpression(expression.right),
     ]);
   }
 
   private collectMemberExpression(
     expression: MemberExpression,
   ): ExpressionInfo {
+    // Resolve the errors for the member chain.
+    // The result doesn't matter, only the error resolution here.
     const errors: ExpressionError[] = [];
     this.tryResolveFromMember(expression, errors);
 
@@ -175,9 +175,9 @@ export class ExpressionInfoCollector {
       ExpressionInfo.empty({
         errors,
       }),
-      this.collect(expression.object),
+      this.collectExpression(expression.object),
       expression.computed
-        ? this.collect(expression.property)
+        ? this.collectExpression(expression.property)
         : ExpressionInfo.empty(),
     ]);
   }
@@ -187,7 +187,7 @@ export class ExpressionInfoCollector {
   }
 
   private collectUnaryExpression(expression: UnaryExpression): ExpressionInfo {
-    return this.collect(expression.argument);
+    return this.collectExpression(expression.argument);
   }
 
   //////////// Resolution methods ////////////
@@ -222,14 +222,18 @@ export class ExpressionInfoCollector {
       case 'Identifier':
         return [expression.name];
       case 'MemberExpression':
-        const subIdent = this.tryResolveCallIdent(expression.object);
-
         let currIdent: RuntimeValue | SimpleType;
         if (expression.computed) {
           currIdent = this.tryResolveIndexLiteral(expression.property);
         } else {
           currIdent = expression.property.name;
         }
+
+        if (currIdent instanceof RuntimeValue) {
+          return [currIdent];
+        }
+
+        const subIdent = this.tryResolveCallIdent(expression.object);
 
         return [...subIdent, currIdent] as
           | [RuntimeValue, ...SimpleType[]]
@@ -287,8 +291,10 @@ export class ExpressionInfoCollector {
         )
       ) {
         return this._options.context[expression.name];
-      } else if (errors) {
-        errors.push(
+      } else {
+        this.tryAddError(
+          expression,
+          errors,
           new ExpressionError(
             `Identifier (${this._valueFormatter(expression.name)}) not found`,
           ),
@@ -319,11 +325,11 @@ export class ExpressionInfoCollector {
       }
 
       if (typeof index !== 'string' && typeof index !== 'number') {
-        if (errors) {
-          errors.push(
-            new ExpressionError(`Cannot index with type ${typeof index}`),
-          );
-        }
+        this.tryAddError(
+          expression,
+          errors,
+          new ExpressionError(`Cannot index with type ${typeof index}`),
+        );
       } else {
         let ctx: ExpressionReturnType | RuntimeValue;
         let gotCtx = false;
@@ -346,8 +352,10 @@ export class ExpressionInfoCollector {
             return (ctx as any)[index];
           } else if (canAccessMember(this._options.memberChecks, ctx, index)) {
             return (ctx as any)[index];
-          } else if (errors) {
-            errors.push(
+          } else {
+            this.tryAddError(
+              expression,
+              errors,
               new ExpressionError(
                 `Not allowed to index ${this._valueFormatter(
                   ctx,
@@ -379,5 +387,18 @@ export class ExpressionInfoCollector {
     }
 
     return values;
+  }
+
+  private tryAddError(
+    expression: Expression,
+    errors: ExpressionError[] | undefined,
+    error: ExpressionError,
+  ) {
+    if (errors) {
+      if (!this._visited.has(expression)) {
+        errors.push(error);
+        this._visited.add(expression);
+      }
+    }
   }
 }
