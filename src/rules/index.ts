@@ -2,6 +2,7 @@ import { ConvertContext, MathContext, StringContext } from '../contexts';
 import {
   Evaluator,
   ExpressionReturnType,
+  MemberCheckFn,
   objectOwnPropertyMemberCheck,
   stringIndexMemberCheck,
   stringMethodMemberCheck,
@@ -9,6 +10,12 @@ import {
 } from '../evaluator';
 import { DependencyGraph } from './dependency-graph';
 import { ResultListener } from './result-listener';
+
+export const standardMemberChecks: MemberCheckFn[] = [
+  objectOwnPropertyMemberCheck,
+  stringMethodMemberCheck,
+  stringIndexMemberCheck,
+];
 
 export interface Rule {
   expression: string;
@@ -146,11 +153,7 @@ export class Rules {
         ...rule.context,
       },
       // Load in standard member checks.
-      memberChecks: [
-        objectOwnPropertyMemberCheck,
-        stringMethodMemberCheck,
-        stringIndexMemberCheck,
-      ],
+      memberChecks: standardMemberChecks,
     });
 
     const result: RuleResult = {

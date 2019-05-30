@@ -4,84 +4,39 @@ import {
   CallExpression,
   Compound,
   ConditionalExpression,
-  Expression as BaseExpression,
+  Expression,
   Identifier,
   Literal,
   LogicalExpression,
   MemberExpression,
-  ThisExpression,
   UnaryExpression,
 } from 'jsep';
 import { ExpressionError } from './expression-error';
-
-type Expression =
-  | ArrayExpression
-  | BinaryExpression
-  | CallExpression
-  | Compound
-  | ConditionalExpression
-  | Identifier
-  | Literal
-  | LogicalExpression
-  | MemberExpression
-  | ThisExpression
-  | UnaryExpression;
-
-export interface TypeMap extends Record<string, ExpressionReturnType> {}
-
-export type SimpleType = string | number | boolean;
-
-export type FunctionType = (
-  ...args: any[]
-) => ExpressionReturnType | Promise<ExpressionReturnType>;
-
-export interface ArrayType extends Array<ExpressionReturnType> {}
-
-export type ExpressionReturnType =
-  | SimpleType
-  | ArrayType
-  | FunctionType
-  | TypeMap
-  | object;
-
-export interface ExpressionResult<T = ExpressionReturnType> {
-  value: T;
-  nodes: number;
-  functionCalls: number;
-}
-
-export type MemberCheckFn = (
-  value: ExpressionReturnType,
-  ident: string | number,
-) => boolean;
-
-export interface EvaluatorOptions {
-  /**
-   * The context of the expression.
-   */
-  context: TypeMap;
-  /**
-   * An iterable of functions that check whether the given identifier can be used to
-   * index the given value.
-   * If any of these return true, then the indexing operation is allowed.
-   */
-  memberChecks?: Iterable<MemberCheckFn>;
-}
+import {
+  ArrayType,
+  EvaluatorOptions,
+  ExpressionResult,
+  ExpressionReturnType,
+  MemberCheckFn,
+  SimpleType,
+  TypeMap,
+} from './utils';
+import { canAccessMember } from './utils';
 
 export class ExpressionEvaluator {
   private readonly _context: TypeMap;
   private readonly _memberChecks?: Iterable<MemberCheckFn>;
+  private readonly _valueFormatter: (value: any) => string;
 
   public constructor(options: EvaluatorOptions) {
     this._context = options.context;
     this._memberChecks = options.memberChecks;
+    this._valueFormatter = options.valueFormatter || String;
   }
 
   public async evalExpression(
-    baseExpression: BaseExpression,
+    expression: Expression,
   ): Promise<ExpressionResult> {
-    const expression: Expression = baseExpression as any;
-
     switch (expression.type) {
       case 'ArrayExpression':
         return this.evalArrayExpression(expression);
@@ -107,7 +62,7 @@ export class ExpressionEvaluator {
         return this.evalUnaryExpression(expression);
       default:
         throw new ExpressionError(
-          `Expression type ${baseExpression.type} is invalid`,
+          `Expression type ${(expression as any).type} is invalid`,
         );
     }
   }
@@ -310,16 +265,16 @@ export class ExpressionEvaluator {
   }
 
   private evalIdentifierExpression(expression: Identifier): ExpressionResult {
-    const value = this._context[expression.name];
-
-    if (value !== undefined) {
+    if (Object.prototype.hasOwnProperty.call(this._context, expression.name)) {
       return {
-        value,
+        value: this._context[expression.name],
         nodes: 1,
         functionCalls: 0,
       };
     } else {
-      throw new ExpressionError(`Identifier (${expression.name}) not found`);
+      throw new ExpressionError(
+        `Identifier (${this._valueFormatter(expression.name)}) not found`,
+      );
     }
   }
 
@@ -375,14 +330,22 @@ export class ExpressionEvaluator {
   ): Promise<ExpressionResult> {
     const [value, property] = await Promise.all([
       this.evalExpression(expression.object),
-      !expression.computed && expression.property.type === 'Identifier'
-        ? {
-            value: (expression.property as Identifier).name,
+      expression.computed
+        ? this.evalExpression(expression.property)
+        : {
+            value: expression.property.name,
             nodes: 1,
             functionCalls: 0,
-          }
-        : this.evalExpression(expression.property),
+          },
     ]);
+
+    if (typeof value.value === 'undefined' || value.value === null) {
+      throw new ExpressionError(
+        `Cannot index ${
+          typeof value.value === 'undefined' ? 'undefined' : 'null'
+        }`,
+      );
+    }
 
     if (
       typeof property.value !== 'string' &&
@@ -391,31 +354,29 @@ export class ExpressionEvaluator {
       throw new ExpressionError(`Cannot index with type ${typeof property}`);
     }
 
-    if (this._memberChecks) {
-      for (const memberCheckFn of this._memberChecks) {
-        if (memberCheckFn(value.value, property.value)) {
-          let val = (value.value as any)[property.value];
+    if (canAccessMember(this._memberChecks, value.value, property.value)) {
+      let val = (value.value as any)[property.value];
 
-          // If the resolved value is a function, we need to bind it
-          // to the object in order to preserve the 'this' reference.
-          if (typeof val === 'function') {
-            val = val.bind(value.value);
-          }
-
-          return {
-            value: val,
-            nodes: 1 + value.nodes + property.nodes,
-            functionCalls: value.functionCalls + property.functionCalls,
-          };
-        }
+      // If the resolved value is a function, we need to bind it
+      // to the object in order to preserve the 'this' reference.
+      if (typeof val === 'function') {
+        val = val.bind(value.value);
       }
-    }
 
-    throw new ExpressionError(
-      `Not allowed to index ${value.value} (type: ${typeof value.value}) with ${
-        property.value
-      } (type: ${typeof property.value})`,
-    );
+      return {
+        value: val,
+        nodes: 1 + value.nodes + property.nodes,
+        functionCalls: value.functionCalls + property.functionCalls,
+      };
+    } else {
+      throw new ExpressionError(
+        `Not allowed to index ${this._valueFormatter(
+          value.value,
+        )} (type: ${typeof value.value}) with ${this._valueFormatter(
+          property.value,
+        )} (type: ${typeof property.value})`,
+      );
+    }
   }
 
   private evalThisExpression(): ExpressionResult<TypeMap> {

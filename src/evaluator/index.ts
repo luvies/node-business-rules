@@ -1,27 +1,11 @@
-import jsep, { Expression as BaseExpression } from 'jsep';
-import { ExpressionError } from './expression-error';
-import {
-  ArrayType,
-  EvaluatorOptions,
-  ExpressionEvaluator,
-  ExpressionResult,
-  ExpressionReturnType,
-  SimpleType,
-  TypeMap,
-} from './expression-evaluator';
+import jsep, { Expression } from 'jsep';
+import { ExpressionEvaluator } from './expression-evaluator';
+import { EvaluatorOptions, ExpressionResult } from './utils';
 
+export * from './expression-error';
+export * from './expression-evaluator';
 export * from './member-checks';
-
-export {
-  ArrayType,
-  EvaluatorOptions,
-  ExpressionError,
-  ExpressionEvaluator,
-  ExpressionResult,
-  ExpressionReturnType,
-  SimpleType,
-  TypeMap,
-};
+export * from './utils';
 
 export class Evaluator {
   public constructor(public options: EvaluatorOptions) {}
@@ -33,7 +17,7 @@ export class Evaluator {
   }
 
   public async evalExpression(
-    expression: BaseExpression,
+    expression: Expression,
   ): Promise<ExpressionResult> {
     const expressionEvaluator = new ExpressionEvaluator(this.options);
 
