@@ -140,7 +140,7 @@ export class ExpressionInfoCollector {
   private collectIdentifierExpression(expression: Identifier): ExpressionInfo {
     if (this._options) {
       const errors: ExpressionError[] = [];
-      this.tryResoveFromIdentifier(expression, errors);
+      this.tryResolveFromIdentifier(expression, errors);
 
       return ExpressionInfo.empty({
         errors,
@@ -267,7 +267,7 @@ export class ExpressionInfoCollector {
       case 'Literal':
         return expression.value;
       case 'Identifier':
-        return this.tryResoveFromIdentifier(expression, errors);
+        return this.tryResolveFromIdentifier(expression, errors);
       case 'MemberExpression':
         return this.tryResolveFromMember(expression, errors);
       case 'ArrayExpression':
@@ -279,7 +279,7 @@ export class ExpressionInfoCollector {
     return new RuntimeValue();
   }
 
-  private tryResoveFromIdentifier(
+  private tryResolveFromIdentifier(
     expression: Identifier,
     errors?: ExpressionError[],
   ): ExpressionReturnType | RuntimeValue {
@@ -340,7 +340,7 @@ export class ExpressionInfoCollector {
             gotCtx = true;
             break;
           case 'Identifier':
-            ctx = this.tryResoveFromIdentifier(expression.object);
+            ctx = this.tryResolveFromIdentifier(expression.object);
             gotCtx = true;
             break;
         }
