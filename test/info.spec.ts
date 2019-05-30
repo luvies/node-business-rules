@@ -7,7 +7,7 @@ import {
 
 describe('Info collector', () => {
   it('analyses simple expressions without context', () => {
-    const info = new ExpressionInfoCollector({});
+    const info = new ExpressionInfoCollector();
 
     let res = info.collect('a');
 

@@ -39,7 +39,7 @@ export class ExpressionInfoCollector {
      * Defaults to `String`.
      */
     valueFormatter?: (value: any) => string;
-  }) {
+  } = {}) {
     this._options = evalOpts;
     this._valueFormatter =
       valueFormatter || (evalOpts && evalOpts.valueFormatter) || String;
