@@ -13,3 +13,6 @@ install:
 script:
   - yarn lint
   - yarn test:ci
+
+after_success:
+  - yarn test:coverage
