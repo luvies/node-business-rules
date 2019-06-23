@@ -16,12 +16,14 @@
     "test": "jest --expand",
     "test:ci": "jest --ci --expand",
     "test:watch": "jest --watch",
+    "test:coverage": "cat ./coverage/lcov.info | coveralls",
     "prepublishOnly": "yarn build && yarn test",
     "postpublish": "git push && git push --tags",
     "clean": "rm -rf dist/* *.tsbuildinfo"
   },
   "dependencies": {
     "@luvies/evaluator": "^0.1.1",
+    "coveralls": "^3.0.4",
     "tslib": "^1.10.0"
   },
   "devDependencies": {
@@ -51,45 +53,5 @@
     "rules",
     "jsep",
     "expression"
-  ],
-  "jest": {
-    "collectCoverage": false,
-    "collectCoverageFrom": [
-      "src/**/*.{js,jsx,ts,tsx}",
-      "!**/*.d.ts"
-    ],
-    "setupFiles": [],
-    "testMatch": [
-      "<rootDir>/test/**/?(*.)(spec|test).(j|t)s?(x)"
-    ],
-    "testEnvironment": "node",
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "transformIgnorePatterns": [
-      "[/\\\\]node_modules[/\\\\].+\\.(js|jsx|mjs|ts|tsx)$"
-    ],
-    "rootDir": "./",
-    "roots": [
-      "<rootDir>/test"
-    ],
-    "moduleFileExtensions": [
-      "web.ts",
-      "ts",
-      "web.tsx",
-      "tsx",
-      "web.js",
-      "js",
-      "web.jsx",
-      "jsx",
-      "json",
-      "node",
-      "mjs"
-    ],
-    "globals": {
-      "ts-jest": {
-        "tsConfig": "tsconfig.json"
-      }
-    }
-  }
+  ]
 }
