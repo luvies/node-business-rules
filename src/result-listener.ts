@@ -4,27 +4,28 @@ interface ResultResolver<T> {
 }
 
 export class ResultListener<T> {
-  private results = new Map<string, T>();
-  private listeners: Array<ResultResolver<T>> = [];
+  private _results = new Map<string, T>();
+  private _listeners: Array<ResultResolver<T>> = [];
 
-  public onResult(id: string, result: T) {
-    const listeners = this.listeners.filter(listener => {
+  public onResult(id: string, result: T): void {
+    const listeners = this._listeners.filter(listener => {
       return listener.target === id;
     });
 
     for (const listener of listeners) {
       listener.resolve(result);
-      this.listeners.splice(this.listeners.indexOf(listener), 1);
+      this._listeners.splice(this._listeners.indexOf(listener), 1);
     }
-    this.results.set(id, result);
+    this._results.set(id, result);
   }
 
   public async wait(id: string): Promise<T> {
-    if (this.results.has(id)) {
-      return this.results.get(id)!;
+    if (this._results.has(id)) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return this._results.get(id)!;
     }
     return new Promise(resolve => {
-      this.listeners.push({
+      this._listeners.push({
         resolve,
         target: id,
       });

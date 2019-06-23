@@ -10,29 +10,34 @@
     "access": "public"
   },
   "scripts": {
-    "build": "rm -rf dist/* && tsc --project .",
-    "lint": "tslint --project . && prettier --check 'src/**/*.ts' 'test/**/*.ts'",
-    "fix": "tslint --project . --fix && prettier --check --write 'src/**/*.ts' 'test/**/*.ts'",
-    "test": "jest",
+    "build": "tsc",
+    "lint": "./node_modules/@luvies/config/scripts/lint.sh",
+    "fix": "./node_modules/@luvies/config/scripts/lint.sh fix",
+    "test": "jest --expand",
+    "test:ci": "jest --ci --expand",
     "test:watch": "jest --watch",
     "prepublishOnly": "yarn build && yarn test",
     "postpublish": "git push && git push --tags",
-    "postinstall": "rm -rf ./node_modules/jsep/typings/*"
+    "clean": "rm -rf dist/* *.tsbuildinfo"
   },
   "dependencies": {
     "@luvies/evaluator": "^0.1.1",
-    "jsep": "^0.3.4"
+    "tslib": "^1.10.0"
   },
   "devDependencies": {
+    "@luvies/config": "^1.4.3",
     "@types/jest": "^24.0.13",
     "@types/node": "^12.0.2",
+    "@typescript-eslint/eslint-plugin": "^1.10.2",
+    "@typescript-eslint/parser": "^1.10.2",
+    "eslint": "^5.16.0",
+    "eslint-config-prettier": "^5.0.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "eslint-plugin-sort-imports-es6-autofix": "^0.4.0",
     "jest": "^24.8.0",
-    "prettier": "^1.17.1",
+    "prettier": "^1.18.2",
     "ts-jest": "^24.0.2",
-    "tslint": "^5.16.0",
-    "tslint-config-prettier": "^1.18.0",
-    "tslint-eslint-rules": "^5.4.0",
-    "typescript": "^3.4.5"
+    "typescript": "^3.5.2"
   },
   "files": [
     "dist",

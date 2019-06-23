@@ -8,9 +8,7 @@ describe('Dependency graph', () => {
     graph.addDependency('a', 'b');
     expect(graph.canCall('b', 'a')).toBe(false);
     expect(graph.canCall('a', 'b')).toBe(true);
-    expect(() => graph.addDependency('b', 'a')).toThrow(
-      'Circular dependency detected',
-    );
+    expect(() => graph.addDependency('b', 'a')).toThrow('Circular dependency detected');
   });
 
   it('Basic A -> B -> C', () => {
@@ -19,12 +17,8 @@ describe('Dependency graph', () => {
     graph.addDependency('b', 'c');
     graph.addDependency('a', 'c');
 
-    expect(() => graph.addDependency('b', 'a')).toThrow(
-      'Circular dependency detected',
-    );
-    expect(() => graph.addDependency('c', 'a')).toThrow(
-      'Circular dependency detected',
-    );
+    expect(() => graph.addDependency('b', 'a')).toThrow('Circular dependency detected');
+    expect(() => graph.addDependency('c', 'a')).toThrow('Circular dependency detected');
   });
 
   it('Tree', () => {
@@ -43,17 +37,13 @@ describe('Dependency graph', () => {
 
     graph.addDependency('left', 'right');
 
-    expect(() => graph.addDependency('base', 'leaf')).toThrow(
-      'Circular dependency detected',
-    );
+    expect(() => graph.addDependency('base', 'leaf')).toThrow('Circular dependency detected');
 
     graph.addDependency('leaf', 'base');
   });
 
   it('Call non-existent node', () => {
     const graph = new DependencyGraph(['a']);
-    expect(() => graph.addDependency('a', 'b')).toThrow(
-      'Target not found in list',
-    );
+    expect(() => graph.addDependency('a', 'b')).toThrow('Target not found in list');
   });
 });

@@ -1,0 +1,18 @@
+{
+  "root": true,
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "extends": "./node_modules/@luvies/config/eslint.base.json",
+  "env": {
+    "es6": true
+  },
+  "overrides": [
+    {
+      "files": ["test/**"],
+      "rules": {
+        "@typescript-eslint/no-non-null-assertion": "off"
+      }
+    }
+  ]
+}

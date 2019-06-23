@@ -77,3 +77,5 @@ typings/
 /prebuild
 
 .DS_Store
+
+*.tsbuildinfo

@@ -1,14 +1,14 @@
+import { DependencyGraph } from './dependency-graph';
 import {
-  contexts,
   ExpressionEvaluator,
   ExpressionReturnType,
   MemberCheckFn,
+  TypeMap,
+  contexts,
   objectOwnPropertyMemberCheck,
   stringIndexMemberCheck,
   stringMethodMemberCheck,
-  TypeMap,
 } from '@luvies/evaluator';
-import { DependencyGraph } from './dependency-graph';
 import { ResultListener } from './result-listener';
 
 export const standardMemberChecks: MemberCheckFn[] = [
@@ -47,43 +47,43 @@ export interface RulesOptions {
 export class Rules {
   public aliases: Map<string, string>;
 
-  private context: TypeMap;
-  private previous?: Map<string, ExpressionReturnType>;
-  private rules = new Map<string, Rule>();
+  private _context: TypeMap;
+  private _previous?: Map<string, ExpressionReturnType>;
+  private _rules = new Map<string, Rule>();
 
   public constructor(context: TypeMap = {}, options: RulesOptions = {}) {
-    this.context = context;
-    this.previous = options.previous;
+    this._context = context;
+    this._previous = options.previous;
     this.aliases = options.aliases || new Map();
   }
 
-  public set(id: string, rule: Rule) {
+  public set(id: string, rule: Rule): this {
     if (this.get(id)) {
       throw new Error(`Rule with id '${id}' already exists`);
     }
-    this.rules.set(id, rule);
+    this._rules.set(id, rule);
+
+    return this;
   }
 
   public get(id: string): Rule | undefined {
-    return this.rules.get(id);
+    return this._rules.get(id);
   }
 
   public has(id: string): boolean {
-    return this.rules.has(id);
+    return this._rules.has(id);
   }
 
   public delete(id: string): boolean {
-    return this.rules.delete(id);
+    return this._rules.delete(id);
   }
 
   public async eval(): Promise<RuleResults> {
-    const graph = new DependencyGraph(Array.from(this.rules.keys()));
+    const graph = new DependencyGraph(Array.from(this._rules.keys()));
     const resultListener = new ResultListener<RuleResult>();
 
     const rawResults = await Promise.all(
-      Array.from(this.rules).map(([id, rule]) =>
-        this.evalRule(id, rule, graph, resultListener),
-      ),
+      Array.from(this._rules).map(([id, rule]) => this._evalRule(id, rule, graph, resultListener)),
     );
 
     const results = new Map<string, ExpressionReturnType>();
@@ -93,9 +93,8 @@ export class Rules {
 
     for (const rawResult of rawResults) {
       if (!rawResult.error) {
-        results.set(rawResult.id, rawResult.value!);
-        const wasActivated =
-          this.previous && this.previous.get(rawResult.id) === true;
+        results.set(rawResult.id, rawResult.value);
+        const wasActivated = this._previous && this._previous.get(rawResult.id) === true;
         if (rawResult.activated) {
           if (!wasActivated) {
             activated.push(rawResult.id);
@@ -111,7 +110,7 @@ export class Rules {
     }
 
     // Persist the state across runs so rules aren't constantly re-activated.
-    this.previous = results;
+    this._previous = results;
 
     return {
       results,
@@ -121,7 +120,7 @@ export class Rules {
     };
   }
 
-  private async evalRule(
+  private async _evalRule(
     id: string,
     rule: Rule,
     graph: DependencyGraph,
@@ -147,7 +146,7 @@ export class Rules {
           return ruleResult.value;
         },
         ...contexts,
-        ...this.context,
+        ...this._context,
         ...rule.context,
       },
       // Load in standard member checks.
