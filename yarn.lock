@@ -290,10 +290,10 @@
   resolved "https://registry.yarnpkg.com/@luvies/config/-/config-1.4.3.tgz#4c92cf9da59b48a9b5ba2a959ddfa7d0b799450f"
   integrity sha512-4NnfgQlwuws0QAURu4Kjj3XteWj3whgllE4kORabqkuWDzdRmQsWkutp/U9gaAfnu/QYFtQHSMdQqdGGiAGCtQ==
 
-"@luvies/evaluator@^0.1.1":
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/@luvies/evaluator/-/evaluator-0.1.1.tgz#013eea2c62763f26ba8b1f0c84f1ee39175e7676"
-  integrity sha512-zOZV7eZLzNzLHfR9km2JighpBAOYY4GU9jeqSSURYSUwJTPpAirBpNIvfjy6GU9a0uVdIsVYP+3sbfMwv490vA==
+"@luvies/evaluator@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@luvies/evaluator/-/evaluator-0.2.0.tgz#de585b6a2f6cf9a5c6844a0abce7605844e55570"
+  integrity sha512-ybmB13v6VwPtwqeMLTFeSMA0tSUMmKRV0jQNaC87BS290R1Xem3JRFWA+DtF92sS7Z/aWPzx4Og/jX3CzvWejw==
   dependencies:
     jsep "^0.3.4"
     tslib "^1.10.0"

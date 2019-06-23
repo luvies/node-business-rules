@@ -22,7 +22,7 @@
     "clean": "rm -rf dist/* *.tsbuildinfo"
   },
   "dependencies": {
-    "@luvies/evaluator": "^0.1.1",
+    "@luvies/evaluator": "^0.2.0",
     "coveralls": "^3.0.4",
     "tslib": "^1.10.0"
   },

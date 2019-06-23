@@ -2,20 +2,11 @@ import { DependencyGraph } from './dependency-graph';
 import {
   ExpressionEvaluator,
   ExpressionReturnType,
-  MemberCheckFn,
   TypeMap,
   contexts,
-  objectOwnPropertyMemberCheck,
-  stringIndexMemberCheck,
-  stringMethodMemberCheck,
+  standardMemberChecks,
 } from '@luvies/evaluator';
 import { ResultListener } from './result-listener';
-
-export const standardMemberChecks: MemberCheckFn[] = [
-  objectOwnPropertyMemberCheck,
-  stringMethodMemberCheck,
-  stringIndexMemberCheck,
-];
 
 export interface Rule {
   expression: string;
