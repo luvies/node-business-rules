@@ -285,6 +285,14 @@
     "@types/istanbul-reports" "^1.1.1"
     "@types/yargs" "^12.0.9"
 
+"@luvies/evaluator@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@luvies/evaluator/-/evaluator-0.1.1.tgz#013eea2c62763f26ba8b1f0c84f1ee39175e7676"
+  integrity sha512-zOZV7eZLzNzLHfR9km2JighpBAOYY4GU9jeqSSURYSUwJTPpAirBpNIvfjy6GU9a0uVdIsVYP+3sbfMwv490vA==
+  dependencies:
+    jsep "^0.3.4"
+    tslib "^1.10.0"
+
 "@types/babel__core@^7.1.0":
   version "7.1.2"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.1.2.tgz#608c74f55928033fce18b99b213c16be4b3d114f"
@@ -3423,6 +3431,11 @@ tslib@1.9.0:
   version "1.9.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.9.0.tgz#e37a86fda8cbbaf23a057f473c9f4dc64e5fc2e8"
   integrity sha512-f/qGG2tUkrISBlQZEjEqoZ3B2+npJjIf04H1wuAv9iA8i04Icp+61KRXxFdha22670NJopsZCIjhC3SnjPRKrQ==
+
+tslib@^1.10.0:
+  version "1.10.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.10.0.tgz#c3c19f95973fb0a62973fb09d90d961ee43e5c8a"
+  integrity sha512-qOebF53frne81cf0S9B41ByenJ3/IuH8yJKngAX35CmiZySA0khhkovshKK+jGCaMnVomla7gVlIcc3EvKPbTQ==
 
 tslib@^1.8.0, tslib@^1.8.1:
   version "1.9.3"

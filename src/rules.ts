@@ -1,13 +1,13 @@
-import { ConvertContext, MathContext, StringContext } from '../contexts';
 import {
-  Evaluator,
+  contexts,
+  ExpressionEvaluator,
   ExpressionReturnType,
   MemberCheckFn,
   objectOwnPropertyMemberCheck,
   stringIndexMemberCheck,
   stringMethodMemberCheck,
   TypeMap,
-} from '../evaluator';
+} from '@luvies/evaluator';
 import { DependencyGraph } from './dependency-graph';
 import { ResultListener } from './result-listener';
 
@@ -127,7 +127,7 @@ export class Rules {
     graph: DependencyGraph,
     resultListener: ResultListener<RuleResult>,
   ): Promise<RuleResult> {
-    const evaluator = new Evaluator({
+    const evaluator = new ExpressionEvaluator({
       // Build up context using custom functions and various defaults.
       context: {
         rule: async (targetId: string) => {
@@ -146,9 +146,7 @@ export class Rules {
           const ruleResult = await resultListener.wait(targetId);
           return ruleResult.value;
         },
-        Math: MathContext,
-        String: StringContext,
-        Convert: ConvertContext,
+        ...contexts,
         ...this.context,
         ...rule.context,
       },

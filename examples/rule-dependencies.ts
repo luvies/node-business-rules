@@ -1,4 +1,4 @@
-import { Rules } from '../rules';
+import { Rules } from '../src';
 
 async function main() {
   const rules = new Rules();

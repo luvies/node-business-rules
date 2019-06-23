@@ -1,4 +1,4 @@
-import { Rules } from '../rules';
+import { Rules } from '../src';
 
 // This function would be replaced with one to connect to your database
 // and fetch a variable of a given name and timeframe. In this example
@@ -14,7 +14,6 @@ async function window(name: string, timeframe: string): Promise<number[]> {
         default:
           throw new Error('Timeframe not defined');
       }
-      break;
     case 'speed':
       switch (timeframe) {
         case '1m':
@@ -24,7 +23,6 @@ async function window(name: string, timeframe: string): Promise<number[]> {
         default:
           throw new Error('Timeframe not defined');
       }
-      break;
     default:
       throw new Error('Variable name not defined');
   }

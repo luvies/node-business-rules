@@ -1,4 +1,4 @@
-import { DependencyGraph } from '../src/rules/dependency-graph';
+import { DependencyGraph } from '../src/dependency-graph';
 
 describe('Dependency graph', () => {
   it('Basic A -> B', () => {
