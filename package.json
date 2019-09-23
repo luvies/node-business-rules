@@ -1,6 +1,6 @@
 {
   "name": "@luvies/business-rules",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "A JS-expression-based rules engine",
   "main": "dist/index.js",
   "repository": "https://github.com/luvies/node-business-rules",
