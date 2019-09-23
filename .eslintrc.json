@@ -1,7 +1,7 @@
 {
   "root": true,
   "parserOptions": {
-    "project": "./tsconfig.json"
+    "project": "./tsconfig.eslint.json"
   },
   "extends": "./node_modules/@luvies/config/eslint.base.json",
   "env": {
