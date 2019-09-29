@@ -1,0 +1,62 @@
+name: Node CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [8.x, 10.x, 12.x]
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install, build, and test
+        run: |
+          yarn
+          yarn lint
+          yarn build
+          yarn test:ci
+        env:
+          CI: true
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    needs: build
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js (NPM registry)
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install, build, and test
+        run: |
+          yarn
+          yarn build
+        env:
+          CI: true
+      - name: Auto publish to NPM
+        uses: luvies/action-yarn-publish@v0.1.0
+        with:
+          git-tag: true
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.YARN_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Use Node.js (Github registry)
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+          registry-url: 'https://npm.pkg.github.com'
+      - name: Auto publish to github
+        uses: luvies/action-yarn-publish@v0.1.0
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
